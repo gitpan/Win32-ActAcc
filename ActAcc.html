@@ -494,8 +494,6 @@ tightly bracket the scope of your EventMonitor objects,
 or deactivate them with $eh-&gt;<CODE>activate(0)</CODE> as soon as they are no longer interesting.</P>
 <P>The event hook receives WinEvents and records them in a fixed-size circular buffer.  
 There's no overrun indicator, so try to keep your EventMonitors reasonably up-to-date.</P>
-<P>If createEventMonitor dies, maybe ActAcc can't find <EM>ActAccEM.dll</EM> (the event-hook DLL). 
-See <A HREF="#installation">INSTALLATION</A>.</P>
 <P>
 <H3><A NAME="eventmonitor">EventMonitor</A></H3>
 <P>
@@ -638,7 +636,6 @@ Office, it would be nice to get a ``native object model'' IDispatch* from Access
 and hand it off to Win32::OLE to make Office-specific OLE Automation method calls.</P>
 <P>There's no overrun indicator on an EventMonitor.</P>
 <P>Win32::ActAcc probably doesn't work multi-threaded.</P>
-<P><EM>ActAccEM.dll</EM> goes in a weird place in the Perl tree (not under site/).</P>
 <P><CODE>nav()</CODE> and <CODE>findDescendant()</CODE> should accept the same path arguments.  
 And the path notation should provide a dizzying combination of XPath and
 regular-expression features.  (For XPath, see <A HREF="http://www.w3.org/TR/xpath">http://www.w3.org/TR/xpath</A>.)</P>
@@ -647,24 +644,22 @@ regular-expression features.  (For XPath, see <A HREF="http://www.w3.org/TR/xpat
 <H1><A NAME="installation">INSTALLATION</A></H1>
 <PRE>
  perl makefile.pl
- nmake install
- nmake test</PRE>
-<P>Yes, 'install' before 'test'; otherwise the event-hook DLL won't be found.  Surely
-there is a way to fix this.</P>
-<P>You need the July 2000 ``Platform SDK''.  
+ nmake 
+ nmake test
+ nmake install</PRE>
+<P>Prerequisites:</P>
+<UL>
+<LI>
+You need the July 2000 ``Platform SDK''.  
 Earlier versions of the Active Accessibility SDK could give problems compiling.
-I compiled ActAcc using Visual C++ 6.0 SP 4.</P>
-<P>The test suite requires Notepad.exe on the path.</P>
-<P>In addition to the usual files for Perl extensions,
-the Makefile builds <EM>ActAccEM.DLL</EM> to capture WinEvents.
-It puts this DLL in a certain location in the Perl
-installation tree, which you can learn as follows:</P>
+I compiled ActAcc using Visual C++ 6.0 SP 4.
+<P></P>
+<LI>
+The test suite requires Notepad.exe on the path.
+<P></P></UL>
+<P>ActivePerl users can install Win32::ActAcc using PPM.</P>
 <PRE>
- perl -e &quot;use Config; print $Config{'scriptdirexp'}&quot;</PRE>
-<P>Unfortunately, it is not under the 'site' branch of the tree.  
-Someone with a deep and nuanced understanding of MakeMaker might help us here.
-To be proper, perhaps 'nmake' should put <EM>ActAccEM.DLL</EM> in the 'blib' tree, 
-and perhaps 'nmake install' should put it in the 'site' tree.</P>
+ ppm install --location=<A HREF="http://members.bellatlantic.net/~pbwolf/ppmrepo">http://members.bellatlantic.net/~pbwolf/ppmrepo</A> Win32-ActAcc</PRE>
 <P>
 <HR>
 <H1><A NAME="copyright">COPYRIGHT</A></H1>

@@ -477,9 +477,6 @@ or deactivate them with $eh->activate(0) as soon as they are no longer interesti
 The event hook receives WinEvents and records them in a fixed-size circular buffer.  
 There's no overrun indicator, so try to keep your EventMonitors reasonably up-to-date.
 
-If createEventMonitor dies, maybe ActAcc can't find F<ActAccEM.dll> (the event-hook DLL). 
-See L<"INSTALLATION">.
-
 =head3 EventMonitor
 
 =head4 getEventCount
@@ -645,8 +642,6 @@ There's no overrun indicator on an EventMonitor.
 
 Win32::ActAcc probably doesn't work multi-threaded.
 
-F<ActAccEM.dll> goes in a weird place in the Perl tree (not under site/).
-
 nav() and findDescendant() should accept the same path arguments.  
 And the path notation should provide a dizzying combination of XPath and
 regular-expression features.  (For XPath, see http://www.w3.org/TR/xpathZ<>.)
@@ -654,29 +649,29 @@ regular-expression features.  (For XPath, see http://www.w3.org/TR/xpathZ<>.)
 =head1 INSTALLATION
 
  perl makefile.pl
- nmake install
+ nmake 
  nmake test
+ nmake install
 
-Yes, 'install' before 'test'; otherwise the event-hook DLL won't be found.  Surely
-there is a way to fix this.
+Prerequisites:
+
+=over 4
+
+=item *
 
 You need the July 2000 "Platform SDK".  
 Earlier versions of the Active Accessibility SDK could give problems compiling.
 I compiled ActAcc using Visual C++ 6.0 SP 4.
 
+=item *
+
 The test suite requires Notepad.exe on the path.
 
-In addition to the usual files for Perl extensions,
-the Makefile builds F<ActAccEM.DLL> to capture WinEvents.
-It puts this DLL in a certain location in the Perl
-installation tree, which you can learn as follows:
+=back 4
 
- perl -e "use Config; print $Config{'scriptdirexp'}"
+ActivePerl users can install Win32::ActAcc using PPM.  
 
-Unfortunately, it is not under the 'site' branch of the tree.  
-Someone with a deep and nuanced understanding of MakeMaker might help us here.
-To be proper, perhaps 'nmake' should put F<ActAccEM.DLL> in the 'blib' tree, 
-and perhaps 'nmake install' should put it in the 'site' tree.  
+ ppm install --location=http://members.bellatlantic.net/~pbwolf/ppmrepo Win32-ActAcc
 
 =head1 COPYRIGHT
 

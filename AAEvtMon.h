@@ -45,16 +45,4 @@ struct aaevbuf
 	struct aaevt ae[BUF_CAPY_IN_EVENTS];
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-	ActAccEM_LINKAGE long emGetCounter();
-	ActAccEM_LINKAGE bool emLock();
-	ActAccEM_LINKAGE void emUnlock();
-	ActAccEM_LINKAGE void emGetEventPtr(const long readCursor, const int max, int *actual, struct aaevt **pp);
-	ActAccEM_LINKAGE long emSynch();
-#ifdef __cplusplus
-};
-#endif
-
 #endif

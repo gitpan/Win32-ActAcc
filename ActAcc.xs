@@ -14,6 +14,7 @@
 #include <OleAcc.h>
 #include <WinAble.h>
 #include "AAEvtMon.h"
+#include "ActAccEL.h"
 
 // The SDK from VC 6.0 does not define C macros for IAccessible methods.
 // But the (newer) Platform SDK does.
@@ -24,6 +25,23 @@
 
 //#define MONITOR_OBJPOOL
 //#define MONITOR_OBJPOOL_EVENT_CONSOLIDATOR
+
+HINSTANCE g_hinstDLL = 0;
+
+BOOL WINAPI DllMain(
+  HINSTANCE hinstDLL,  // handle to the DLL module
+  DWORD fdwReason,     // reason for calling function
+  LPVOID lpvReserved   // reserved
+)
+{
+	if (DLL_PROCESS_ATTACH == fdwReason)
+	{
+		g_hinstDLL = hinstDLL;
+	}
+	return TRUE;
+}
+
+
 
 /* 
 // todo: GetOleaccVersionInfo
@@ -135,18 +153,26 @@ typedef struct EventConsolidator_ EventConsolidator;
 
 EventConsolidator *EventConsolidator_new()
 {
-	SV *svDllfile = 0;
-	STRLEN lenDllfile = 0;
-	char *szDllfile = 0;
+	char xsDllfile[300];
+	DWORD xsDllLen;
 	HMODULE hDll = 0;
 	EventConsolidator *rv = 0;
 
-	svDllfile = get_sv("Win32::ActAcc::EMDllFile", FALSE);
-	szDllfile = SvPV(svDllfile, lenDllfile);
+	// Start with file name of ActAcc.DLL.
+	xsDllLen = GetModuleFileName(
+			g_hinstDLL,    // handle to module
+			xsDllfile,  // file name of module
+			sizeof(xsDllfile)/sizeof*xsDllfile         // size of buffer
+			);
+
+	// Modify file name, giving complete path to ActAccEM.DLL
+	// (assuming they're in one directory)
+	strcpy(xsDllfile + xsDllLen - 4, "EM.dll");
+
 	New(7, rv, 1, EventConsolidator); 
 	rv->refcount = 1;
 	rv->hhook = 0;
-	hDll = LoadLibrary(szDllfile);
+	hDll = LoadLibrary(xsDllfile);
 	if (hDll)
 	{
 		enum { EVENTS_FROM_ALL_PROCESSES = 0 };

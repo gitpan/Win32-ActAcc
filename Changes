@@ -2,3 +2,7 @@ Revision history for Perl extension Win32::ActAcc.
 
 0.1  Sat Aug 12 13:55:56 2000
 	- original version
+
+0.2  Sat Sep 16 12:55:56 2000
+	- build ActAccEM.dll in the blib tree
+	- installable by PPM

@@ -23,7 +23,7 @@ use vars qw(
 	$EMDllFile
 );
 
-$VERSION = '0.1';
+$VERSION = '0.2';
 
 require Exporter;
 require DynaLoader;
@@ -92,17 +92,6 @@ use vars qw(%AO_);
 sub createEventMonitor
 {
 	my $active = shift;
-
-	# The extension finds the DLL's file name:
-	if (!defined($EMDllFile))
-	{
-		$EMDllFile = $Config{'scriptdirexp'} . "\\ActAccEM.dll";
-		if (!-f $EMDllFile)
-		{
-			croak "Can't find $EMDllFile";
-		}
-	}
-
 	my $rv = events_register($active);
 	return $rv;
 }
