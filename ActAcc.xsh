@@ -36,7 +36,7 @@ mouse_button(x,y, ops)
 	CODE:
 	mouse_button(x, y, ops);
 
-ActAcc *
+void
 AccessibleObjectFromEvent(hwnd, objectId, childId)
 	INPUT:
 	HWND	hwnd
@@ -47,19 +47,18 @@ AccessibleObjectFromEvent(hwnd, objectId, childId)
 	IAccessible *pAccessible = 0;
 	ActAcc *pActAcc = 0;
 	VARIANT varChild;
-	CODE:
+	PPCODE:
 	VariantInit(&varChild);
 	hr = AccessibleObjectFromEvent(hwnd, objectId, childId, &pAccessible, &varChild);
 	croakIf(hr, S_OK != hr, "AccessibleObjectFromEvent");
 	warnIf(hr, !SUCCEEDED(hr), "AccessibleObjectFromEvent");
 	if (VT_I4 != varChild.vt) 
 		croak("oog88");
-	RETVAL = ActAcc_from_IAccessible(pAccessible, varChild.lVal);
+	pActAcc = ActAcc_from_IAccessible(pAccessible, varChild.lVal);
 	IAccessible_Release(pAccessible);
-	OUTPUT:
-	RETVAL
+	XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(pActAcc), pActAcc));
 
-ActAcc *
+void
 AccessibleObjectFromWindow(hwnd, ...)
 	INPUT:
 	HWND	hwnd
@@ -68,7 +67,7 @@ AccessibleObjectFromWindow(hwnd, ...)
 	HRESULT hr = S_OK;
 	IAccessible *pAccessible = 0;
 	ActAcc *pActAcc = 0;
-	CODE:
+	PPCODE:
 	if (items > 1)
 		objectId = SvIV(ST(1));
 	if (!IsWindow(hwnd)) 
@@ -80,12 +79,11 @@ AccessibleObjectFromWindow(hwnd, ...)
 	hr = AccessibleObjectFromWindow(hwnd, objectId, USEGUID(IID_IAccessible), (void**)&pAccessible);
 	croakIf(hr, S_OK != hr, "AccessibleObjectFromWindow");
 	warnIf(hr, !SUCCEEDED(hr), "AccessibleObjectFromWindow");
-	RETVAL = ActAcc_from_IAccessible(pAccessible, objectId);
+	pActAcc = ActAcc_from_IAccessible(pAccessible, objectId);
 	IAccessible_Release(pAccessible);
-	OUTPUT:
-	RETVAL
+	XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(pActAcc), pActAcc));
 
-ActAcc *
+void
 AccessibleObjectFromPoint(x, y)
 	INPUT:
 	long x
@@ -95,16 +93,16 @@ AccessibleObjectFromPoint(x, y)
 	HRESULT hr;
 	POINT point;
 	IAccessible *ia = 0;
-	CODE:
+	ActAcc *pActAcc = 0;
+	PPCODE:
 	VariantInit(&childId);
 	point.x = x;
 	point.y = y;
 	hr = AccessibleObjectFromPoint(point, &ia, &childId);
 	croakIf(hr, !SUCCEEDED(hr), "AccessibleObjectFromPoint");
-	RETVAL = ActAcc_from_IAccessible(ia, childId.lVal);
+	pActAcc = ActAcc_from_IAccessible(ia, childId.lVal);
 	IAccessible_Release(ia);
-	OUTPUT:
-	RETVAL
+	XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(pActAcc), pActAcc));
 
 char *
 GetRoleText(i)
@@ -112,7 +110,7 @@ GetRoleText(i)
 	int	i
 	PREINIT:
 	HRESULT hr = S_OK;
-	char w[20];
+	char w[100];
 	CODE:
 	ZeroMemory(w, sizeof(w));
 	if (!GetRoleText(i, w, sizeof(w)-1))
@@ -121,6 +119,17 @@ GetRoleText(i)
 		croakIf(hr, !SUCCEEDED(hr), "GetRoleText");
 	}
 	RETVAL = w;
+	OUTPUT:
+	RETVAL
+
+char *
+GetRolePackage(i)
+	INPUT:
+	int	i
+	PREINIT:
+	HRESULT hr = S_OK;
+	CODE:
+	RETVAL = packageForRole(i);
 	OUTPUT:
 	RETVAL
 

@@ -25,4 +25,16 @@ t/2_english.t
 typemap
 x86/Win32-ActAcc.tar.gz		ActivePerl PPM installable module
 Win32-ActAcc.ppd		ActivePerl PPM installable module
-eg/aaAIMEliza.pl		Chatbot::Eliza answers your incoming AOL Instant Messages
+eg/elizaNotepad.pl		Chatbot::Eliza boosts your endorphins
+eg/simpleNotepad.pl		How to fire up Notepad and close it
+ActAcc/aaExplorer.pm                   Debugging aid
+ActAcc/MouseTracker.pm                   Debugging aid
+ActAcc/AO.pm                   Accessible object
+ActAcc/Event.pm			Events
+ActAcc/Iterators.pm		Iterators
+ActAcc/Menu.pm		Menu
+ActAcc/MiscRoles.pm		MiscRoles
+ActAcc/Outline.pm		Outlines
+ActAcc/Shell2000.pm		Tray, Start button, etc.
+ActAcc/Window.pm		Window methods
+

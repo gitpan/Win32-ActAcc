@@ -16,9 +16,16 @@
 	<LI><A HREF="#description">DESCRIPTION</A></LI>
 	<UL>
 
-		<LI><A HREF="#what does it all mean">What does it all mean?</A></LI>
-		<LI><A HREF="#samples">Samples</A></LI>
-		<LI><A HREF="#active accessibility client api">Active Accessibility client API</A></LI>
+		<LI><A HREF="#active accessibility and win32::actacc">Active Accessibility and Win32::ActAcc</A></LI>
+		<UL>
+
+			<LI><A HREF="#active accessibility client api: overview">Active Accessibility client API: overview</A></LI>
+			<LI><A HREF="#iaccessible: overview">IAccessible: overview</A></LI>
+			<LI><A HREF="#winevents: overview">WinEvents: overview</A></LI>
+		</UL>
+
+		<LI><A HREF="#there's more than one way to do it">There's more than one way to do it</A></LI>
+		<LI><A HREF="#win32::actacc">Win32::ActAcc</A></LI>
 		<UL>
 
 			<LI><A HREF="#desktop">Desktop</A></LI>
@@ -30,49 +37,102 @@
 			<LI><A HREF="#getstatetextcomposite">GetStateTextComposite</A></LI>
 			<LI><A HREF="#stateconstantname">StateConstantName</A></LI>
 			<LI><A HREF="#objectidconstantname">ObjectIdConstantName</A></LI>
-			<LI><A HREF="#nav">nav</A></LI>
-			<LI><A HREF="#menupick">menuPick</A></LI>
-			<LI><A HREF="#childid_self and lots of other constants">CHILDID_SELF and lots of other constants</A></LI>
-			<UL>
-
-				<LI><A HREF="#event constants">EVENT constants</A></LI>
-				<LI><A HREF="#objid constants">OBJID constants</A></LI>
-				<LI><A HREF="#state constants">STATE constants</A></LI>
-				<LI><A HREF="#role constants">ROLE constants</A></LI>
-				<LI><A HREF="#selflag constants">SELFLAG constants</A></LI>
-				<LI><A HREF="#navdir constants">NAVDIR constants</A></LI>
-			</UL>
-
+			<LI><A HREF="#waitforevent (win32::actacc)">waitForEvent (Win32::ActAcc)</A></LI>
+			<LI><A HREF="#clearevents (win32::actacc)">clearEvents (Win32::ActAcc)</A></LI>
 		</UL>
 
-		<LI><A HREF="#win32::actacc::ao">Win32::ActAcc::AO</A></LI>
+		<LI><A HREF="#win32::actacc::ao  properties and actions">Win32::ActAcc::AO - properties and actions</A></LI>
 		<UL>
 
-			<LI><A HREF="#comparing accessible objects">Comparing Accessible Objects</A></LI>
 			<LI><A HREF="#describe">describe</A></LI>
 			<LI><A HREF="#windowfromaccessibleobject">WindowFromAccessibleObject</A></LI>
 			<LI><A HREF="#get_accname">get_accName</A></LI>
 			<LI><A HREF="#get_accrole">get_accRole</A></LI>
-			<LI><A HREF="#accessiblechildren">AccessibleChildren</A></LI>
-			<LI><A HREF="#navigablechildren">NavigableChildren</A></LI>
-			<LI><A HREF="#get_accparent">get_accParent</A></LI>
 			<LI><A HREF="#get_accstate">get_accState</A></LI>
 			<LI><A HREF="#get_accvalue">get_accValue</A></LI>
 			<LI><A HREF="#acclocation">accLocation</A></LI>
-			<LI><A HREF="#accnavigate">accNavigate</A></LI>
 			<LI><A HREF="#get_accdescription">get_accDescription</A></LI>
 			<LI><A HREF="#get_acchelp">get_accHelp</A></LI>
+			<LI><A HREF="#get_accparent">get_accParent</A></LI>
 			<LI><A HREF="#get_accdefaultaction">get_accDefaultAction</A></LI>
 			<LI><A HREF="#get_acckeyboardshortcut">get_accKeyboardShortcut</A></LI>
-			<LI><A HREF="#get_accchildcount">get_accChildCount</A></LI>
-			<LI><A HREF="#get_accchild">get_accChild</A></LI>
 			<LI><A HREF="#get_accfocus">get_accFocus</A></LI>
 			<LI><A HREF="#accdodefaultaction">accDoDefaultAction</A></LI>
 			<LI><A HREF="#get_itemid">get_itemID</A></LI>
 			<LI><A HREF="#accselect">accSelect</A></LI>
-			<LI><A HREF="#click">click</A></LI>
-			<LI><A HREF="#finddescendant">findDescendant</A></LI>
+			<LI><A HREF="#click (center of accessible object)">click  (center of Accessible Object)</A></LI>
 			<LI><A HREF="#release">Release</A></LI>
+		</UL>
+
+		<LI><A HREF="#win32::actacc::ao  comparison">Win32::ActAcc::AO - comparison</A></LI>
+		<UL>
+
+			<LI><A HREF="#match">match</A></LI>
+			<LI><A HREF="#equals">Equals</A></LI>
+		</UL>
+
+		<LI><A HREF="#win32::actacc::ao  navigation by iterator">Win32::ActAcc::AO - navigation by iterator</A></LI>
+		<UL>
+
+			<LI><A HREF="#menuiterator">MenuIterator</A></LI>
+		</UL>
+
+		<LI><A HREF="#win32::actacc::ao  hunting for children and descendants">Win32::ActAcc::AO - Hunting for children and descendants</A></LI>
+		<UL>
+
+			<LI><A HREF="#drill">drill</A></LI>
+			<LI><A HREF="#dig">dig</A></LI>
+			<LI><A HREF="#tree">tree</A></LI>
+		</UL>
+
+		<LI><A HREF="#win32::actacc::ao  navigation methods">Win32::ActAcc::AO - navigation methods</A></LI>
+		<UL>
+
+			<LI><A HREF="#accessiblechildren">AccessibleChildren</A></LI>
+			<LI><A HREF="#accnavigate">accNavigate</A></LI>
+			<LI><A HREF="#get_accchildcount">get_accChildCount</A></LI>
+			<LI><A HREF="#get_accchild">get_accChild</A></LI>
+		</UL>
+
+		<LI><A HREF="#ao subclasses">AO Subclasses</A></LI>
+		<UL>
+
+			<LI><A HREF="#win32::actacc::window">Win32::ActAcc::Window</A></LI>
+			<UL>
+
+				<LI><A HREF="#mainmenu">mainMenu</A></LI>
+				<LI><A HREF="#systemmenu">systemMenu</A></LI>
+				<LI><A HREF="#titlebar">titlebar</A></LI>
+				<LI><A HREF="#menupick (for win32::actacc::window)">menuPick (for Win32::ActAcc::Window)</A></LI>
+			</UL>
+
+			<LI><A HREF="#win32::actacc::titlebar">Win32::ActAcc::Titlebar</A></LI>
+			<UL>
+
+				<LI><A HREF="#btnmaximize">btnMaximize</A></LI>
+				<LI><A HREF="#btnminimize">btnMinimize</A></LI>
+				<LI><A HREF="#btnclose">btnClose</A></LI>
+				<LI><A HREF="#btnrestore">btnRestore</A></LI>
+			</UL>
+
+			<LI><A HREF="#win32::actacc::menuitem">Win32::ActAcc::MenuItem</A></LI>
+			<UL>
+
+				<LI><A HREF="#menupick">menuPick</A></LI>
+			</UL>
+
+			<LI><A HREF="#win32::actacc::outline">Win32::ActAcc::Outline</A></LI>
+			<UL>
+
+				<LI><A HREF="#getroot">getRoot</A></LI>
+			</UL>
+
+			<LI><A HREF="#win32::actacc::outlineitem">Win32::ActAcc::OutlineItem</A></LI>
+			<UL>
+
+				<LI><A HREF="#getlevel">getLevel</A></LI>
+			</UL>
+
 		</UL>
 
 		<LI><A HREF="#winevents">WinEvents</A></LI>
@@ -83,7 +143,9 @@
 			<UL>
 
 				<LI><A HREF="#waitforevent">waitForEvent</A></LI>
+				<LI><A HREF="#eventloop">eventLoop</A></LI>
 				<LI><A HREF="#getevent">getEvent</A></LI>
+				<LI><A HREF="#drophistory">dropHistory</A></LI>
 				<LI><A HREF="#clear">clear</A></LI>
 				<LI><A HREF="#synch">synch</A></LI>
 				<LI><A HREF="#isactive">isActive</A></LI>
@@ -96,12 +158,20 @@
 			<UL>
 
 				<LI><A HREF="#getao">getAO</A></LI>
+				<LI><A HREF="#accessibleobjectfromevent">AccessibleObjectFromEvent</A></LI>
 				<LI><A HREF="#evdescribe">evDescribe</A></LI>
 			</UL>
 
 			<LI><A HREF="#eventconstantname">EventConstantName</A></LI>
 			<LI><A HREF="#accessibleobjectfromevent">AccessibleObjectFromEvent</A></LI>
-			<LI><A HREF="#event details">Event Details</A></LI>
+		</UL>
+
+		<LI><A HREF="#tuneable parameters">Tuneable Parameters</A></LI>
+		<LI><A HREF="#windows shell">Windows Shell</A></LI>
+		<UL>
+
+			<LI><A HREF="#startbutton">StartButton</A></LI>
+			<LI><A HREF="#startbuttonmenu">StartButtonMenu</A></LI>
 		</UL>
 
 		<LI><A HREF="#tools">Tools</A></LI>
@@ -123,6 +193,17 @@
 		<LI><A HREF="#files installed">Files Installed</A></LI>
 	</UL>
 
+	<LI><A HREF="#appendix  constants">APPENDIX - CONSTANTS</A></LI>
+	<UL>
+
+		<LI><A HREF="#event constants">EVENT constants</A></LI>
+		<LI><A HREF="#objid constants">OBJID constants</A></LI>
+		<LI><A HREF="#state constants">STATE constants</A></LI>
+		<LI><A HREF="#role constants">ROLE constants</A></LI>
+		<LI><A HREF="#selflag constants">SELFLAG constants</A></LI>
+		<LI><A HREF="#navdir constants">NAVDIR constants</A></LI>
+	</UL>
+
 	<LI><A HREF="#copyright">COPYRIGHT</A></LI>
 	<LI><A HREF="#author">AUTHOR</A></LI>
 	<LI><A HREF="#see also">SEE ALSO</A></LI>
@@ -136,71 +217,192 @@
 <P>
 <HR>
 <H1><A NAME="synopsis">SYNOPSIS</A></H1>
-<P>Win32::ActAcc gives Perl scripts free 
-run of the Active Accessibility client API; IAccessible; and ``WinEvents''.</P>
-<P>Active Accessibility lets Perl scripts see what's on the screen, even
-when programs use ``custom controls'', lightweight (drawn) controls 
-that are not technically windows, and the like:  VB for example.</P>
-<P>You'll want to additionally use Win32::GuiTest, and other Win32 modules,
-if you want your script to click, type, manipulate the clipboard, etc.</P>
+<UL>
+<LI>
+Active Accessibility client API
 <PRE>
  use Win32::OLE;
  use Win32::ActAcc;
- Win32::OLE-&gt;Initialize();</PRE>
+ Win32::OLE-&gt;Initialize();
+ $ao = AccessibleObjectFromPoint(320,240);
+ @children = $ao-&gt;AccessibleChildren();
+ $hwnd = $ao-&gt;WindowFromAccessibleObject();
+ $ao2 = AccessibleObjectFromWindow($hwnd);</PRE>
+<P></P>
+<LI>
+IAccessible
 <PRE>
- # Start navigating window tree at its root -- the Desktop.
- $accObj = Desktop();
- @childAccObjs = $accObj-&gt;AccessibleChildren();</PRE>
+ print $ao-&gt;get_accName() . &quot;\n&quot;;
+ print $ao-&gt;get_accValue() . &quot;\n&quot;;
+ print $ao-&gt;get_accDefaultAction() . &quot;\n&quot;;
+ $statebits = $ao-&gt;get_accState();
+ $rolenum = $ao-&gt;get_accRole();
+ $ch1 = $ao-&gt;accNavigate(NAVDIR_FIRSTCHILD());
+ $p = $ao-&gt;get_accParent();</PRE>
+<P></P>
+<LI>
+WinEvents
 <PRE>
- $name = $accObj-&gt;get_accName();
- $rolename = Win32::ActAcc::GetRoleText($accObj-&gt;get_accRole());</PRE>
+ $aoNotepad = Win32::ActAcc::waitForEvent(
+    +{ 'event'=&gt;EVENT_OBJECT_SHOW(),
+       'name'=&gt;qr/Notepad/,
+       'role'=&gt;ROLE_SYSTEM_WINDOW()});</PRE>
+<P></P>
+<LI>
+Iterators
+<P>Win32::ActAcc's iterators can drill into menus and outlines, in addition to 
+the Active Accessibility object hierarchy.</P>
+<PRE>
+ # display children of $ao
+ my $iter = $ao-&gt;iterator();
+ $iter-&gt;open();
+ my $aoi;
+ while ($aoi = $iter-&gt;nextAO())
+ {
+     print $aoi-&gt;describe() . &quot;\n&quot;;
+ }
+ $iter-&gt;close();</PRE>
+<P></P>
+<LI>
+Finding accessible objects
+<PRE>
+ # find any descendant
+ $notepadTextArea = $aoNotepad-&gt;drill(&quot;{editable text}&quot;, +{'max'=&gt;1, 'min'=&gt;1});</PRE>
+<PRE>
+ # find immediate child
+ $AimConversation = $aoIM-&gt;dig( +[ +{'role'=&gt;ROLE_SYSTEM_WINDOW(), 'name'=&gt;qr/\&lt;HTML\&gt;/ } ] );</PRE>
+<PRE>
+ # follow path
+ $tray = Win32::ActAcc::Desktop()-&gt;dig([ 
+            +{'role'=&gt;Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=&gt;'', 'state'=&gt;+{'mask'=&gt;Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=&gt;0}}, 
+            +{'role'=&gt;Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=&gt;'', 'state'=&gt;+{'mask'=&gt;Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=&gt;0}}, 
+            +{'role'=&gt;Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=&gt;'', 'state'=&gt;+{'mask'=&gt;Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=&gt;0}}, 
+            +{'role'=&gt;Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=&gt;'Tray', 'state'=&gt;+{'mask'=&gt;Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=&gt;0}}, 
+            +{'role'=&gt;Win32::ActAcc::ROLE_SYSTEM_PAGETABLIST(), 'state'=&gt;+{'mask'=&gt;Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=&gt;0}} ], 
+        +{'max'=&gt;1,'min'=&gt;1} );</PRE>
+<P></P>
+<LI>
+Task-automation conveniences
+<PRE>
+ use Win32::OLE;
+ use Win32::ActAcc;
+ use Win32::ActAcc::Shell2000;
+ #
+ Win32::OLE-&gt;Initialize();
+ $menu = Win32::ActAcc::Shell2000::StartButtonMenu();
+ Win32::ActAcc::clearEvents();
+ $menu-&gt;menuPick([ qr/^Programs/, qr/Accessories/i, qr/Notepad/i ]);
+ $aoNotepad = Win32::ActAcc::waitForEvent(
+    +{ 'event'=&gt;EVENT_OBJECT_SHOW(),
+       'name'=&gt;qr/Notepad/,
+       'role'=&gt;ROLE_SYSTEM_WINDOW()});
+ $aoNotepad-&gt;menuPick(+[&quot;File&quot;, &quot;Exit&quot;]);</PRE>
+<P></P>
+<LI>
+Tools and samples
+<UL>
+<LI>
+<STRONG>aaDigger.pl</STRONG> shows how to traverse the tree of accessible objects.
+<P></P>
+<LI>
+<STRONG>aaEvents.pl</STRONG> shows you the WinEvents that reflect what you're doing with the GUI.
+<P></P>
+<LI>
+<STRONG>aaWhereAmI.pl</STRONG> shows how to link a pixel location with its accessible object.
+<P></P>
+<LI>
+<STRONG>elizaNotepad.pl</STRONG>, just for fun, uses Notepad as the user interface to Chatbot::Eliza.
+<P></P></UL>
+<P>See under <A HREF="#tools">Tools</A> for more about aaDigger, aaEvents, and aaWhereAmI.</P>
+</UL>
+<P>You'll want to additionally use Win32::GuiTest, and other Win32 modules,
+if you want your script to click, type, manipulate the clipboard, etc.</P>
 <P>
 <HR>
 <H1><A NAME="description">DESCRIPTION</A></H1>
 <P>
-<H2><A NAME="what does it all mean">What does it all mean?</A></H2>
-<P>Win32::ActAcc broadly parallels the Active Accessibility spec.</P>
+<H2><A NAME="active accessibility and win32::actacc">Active Accessibility and Win32::ActAcc</A></H2>
+<P>Active Accessibility is an API from Microsoft.  See <A HREF="#see also">SEE ALSO</A> for a
+pointer to the documentation on Active Accessibility.</P>
+<P>Win32::ActAcc is based on Active Accessibility 1.3 on Windows 2000.  With other
+Active Accessibility implementations, your mileage may vary.</P>
+<P>In keeping with Perl's culture of laziness and impatience, Win32::ActAcc smoothes
+out some of the bumps in Active Accessibility for Perl programmers.  For example,
+a standard Active Accessibility client must carry around <EM>two</EM> keys to each ``accessible''
+thing: an IAccessible* and a child-ID.  What a bore!  Luckily, with Win32::ActAcc, an accessible object
+is an accessible object (Win32::ActAcc::AO); no pairs of keys.</P>
+<P>Active Accessibility has three parts -- the ``client API'', which is not object-based; 
+IAccessible, which is an API that each ``accessible object'' is supposed to implement; 
+and WinEvents, which tell you
+what's going on.</P>
+<P>
+<H3><A NAME="active accessibility client api: overview">Active Accessibility client API: overview</A></H3>
+<P>The client API is mainly useful for getting an ``accessible object'' corresponding to a ``real-world'' on-screen object
+like a window or pushbutton.
+Then you can go use the accessible object using the <A HREF="#win32::actacc::ao">Win32::ActAcc::AO</A> methods.</P>
+<P>(The other two ways of getting an accessible object are:  asking one for another, as with <A HREF="#get_accparent">get_accParent</A>, and 
+monitoring <A HREF="#winevents">WinEvents</A> as windows appear, disappear, move, and so forth.)</P>
+<P>Win32::ActAcc provides access to these Active Accessibility client API functions:
+<A HREF="#accessiblechildren">AccessibleChildren</A>, <A HREF="#accessibleobjectfromevent">AccessibleObjectFromEvent</A>, <A HREF="#accessibleobjectfrompoint">AccessibleObjectFromPoint</A>,
+<A HREF="#accessibleobjectfromwindow">AccessibleObjectFromWindow</A>, <A HREF="#getroletext">GetRoleText</A>,
+<A HREF="#getstatetext">GetStateText</A>, <A HREF="#windowfromaccessibleobject">WindowFromAccessibleObject</A>.</P>
+<P>
+<H3><A NAME="iaccessible: overview">IAccessible: overview</A></H3>
+<P>Win32::ActAcc::AO and its subclasses provide access to these IAccessible functions:
+<A HREF="#accdodefaultaction">accDoDefaultAction</A>,
+<A HREF="#acclocation">accLocation</A>, 
+<A HREF="#accnavigate">accNavigate</A>, 
+<A HREF="#accselect">accSelect</A>, 
+<A HREF="#get_accchild">get_accChild</A>, 
+<A HREF="#get_accchildcount">get_accChildCount</A>, 
+<A HREF="#get_accdefaultaction">get_accDefaultAction</A>, 
+<A HREF="#get_accdescription">get_accDescription</A>, 
+<A HREF="#get_accfocus">get_accFocus</A>, 
+<A HREF="#get_acchelp">get_accHelp</A>, 
+<A HREF="#get_acckeyboardshortcut">get_accKeyboardShortcut</A>, 
+<A HREF="#get_accname">get_accName</A>, 
+<A HREF="#get_accparent">get_accParent</A>, 
+<A HREF="#get_accrole">get_accRole</A>, 
+<A HREF="#get_accstate">get_accState</A>, 
+<A HREF="#get_accvalue">get_accValue</A>.</P>
+<P>Win32::ActAcc does not yet implement get_accSelection (which does not operate on text edits anyway).</P>
+<P>
+<H3><A NAME="winevents: overview">WinEvents: overview</A></H3>
+<P>You can wait for something to happen by using waitForEvent.  And, you can open
+your own ``cursor'' on the stream of WinEvents, using <A HREF="#createeventmonitor">createEventMonitor</A>.</P>
+<P>
+<H2><A NAME="there's more than one way to do it">There's more than one way to do it</A></H2>
+<P>In keeping with the Perl principle of TMTOWTDI (``There's more than one way to do it''),
+and the Perl culture of laziness and impatience, 
+three 
+innovations were necessary, extending raw Active Accessibility:</P>
 <UL>
 <LI>
-You obtain accessible objects and event streams using the Active Accessibility API, via <EM>Win32::ActAcc</EM>.
+<STRONG>Object-orientation.</STRONG>  Whenever Win32::ActAcc gives you an AO, what you
+get is actually a subclass specific to the
+AO's role.  For example, if the role is ROLE_SYSTEM_OUTLINE, you get an object 
+from package Win32::ActAcc::Outline, which inherits from AO.  
+See <A HREF="#ao subclasses">AO Subclasses</A>.  This allows polymorphism, which
+in turn helps us write programs that do the right thing, despite themselves.
+Object-orientation is a slippery slope and led to the further innovations:
 <P></P>
 <LI>
-You manipulate an accessible object using IAccessible, via <EM>Win32::AO</EM>.
+<STRONG>Conveniences.</STRONG>  Such as <A HREF="#menupick">menuPick</A> and outline navigation:  things you
+might suppose would be built-in to Active Accessibility in an obvious and straightforward way, but aren't.
+<P></P>
+<LI>
+<STRONG>Iterators.</STRONG>  Active Accessibility gives you three ways to enumerate the ``children'' of an 
+accessible object.  And darned if they don't sometimes yield conflicting results!  Worse, you
+can't switch freely among them:  one gives you a list, one gives you random access, 
+and one requires that you step from one child to the next.  So Win32::ActAcc wraps the navigation 
+techniques, and others, with iterators that all work alike.  Write your algorithm once and change iterators any time.
 <P></P></UL>
-<P>This pod doesn't duplicate the Active Accessibility spec.  See <A HREF="#see also">SEE ALSO</A>.</P>
-<P><STRONG>Note to folks already acquainted with Active Accessibility:</STRONG> 
-If you've programmed with Active Accessibility in C, you know first-hand that Active Accessibility was
-designed with the convenience of the <EM>server</EM> programmer in mind, and little
-regard for the happiness of the <EM>client</EM>.  Clients often need not one, but two 
-handles to refer to an accessible GUI feature - an IAccessible* and a ``child ID''.  
-Win32::ActAcc wraps that pair of 
-handles in a single Perl object representing each accessible GUI feature:  Win32::AO, for Accessible Object.</P>
-<P>This manual makes the following notational innovations:</P>
-<OL>
-<LI>
-We preserve the name Microsoft chose for the methods and functions that
-come more or less straight out of the Active Accessibility SDK.
-<P></P>
-<LI>
-Active Accessibility has some minor imperfections.  Of course, Win32::ActAcc also has imperfections.
+<P>Active Accessibility has some minor imperfections.  Of course, Win32::ActAcc itself also has imperfections.
 To aid the reader in distinguishing the two, we have taken the liberty of calling out
-some ``Active Accessibility weirdnesses'' as such.
-<P></P></OL>
+some ``Active Accessibility weirdnesses'' as such.  All other parts of this document
+describe the idiosyncracies of Win32::ActAcc.</P>
 <P>
-<H2><A NAME="samples">Samples</A></H2>
-<P><STRONG>aaDigger.pl</STRONG> shows how to traverse the tree of accessible objects.</P>
-<P><STRONG>aaEvents.pl</STRONG> shows you the WinEvents that reflect what you're doing with the GUI.</P>
-<P><STRONG>aaWhereAmI.pl</STRONG> shows how to link a pixel location with its accessible object.</P>
-<P>eg/<STRONG>aaAIMEliza.pl</STRONG>, at the risk of getting ridiculous, shows how to 
-make Chatbot::Eliza respond to your incoming AOL Instant Messages.  AIM is an 
-application whose GUI is not made of standard controls, so this is an example
-of something you could not do (without constantly doing a File-Save As)
-with tools based on the Win32 API, window-classes and window-messages.</P>
-<P>See under <A HREF="#tools">Tools</A> for more about aaDigger, aaEvents, and aaWhereAmI.</P>
-<P>
-<H2><A NAME="active accessibility client api">Active Accessibility client API</A></H2>
-<P>The client API exposes jumping-off points like Desktop and AccessibleObjectFromWindow,
-and ``helper functions'' like GetRoleText.</P>
+<H2><A NAME="win32::actacc">Win32::ActAcc</A></H2>
 <P>If this is your first reading, you may want to read about 
 Desktop and AccessibleObjectFromWindow in this section,
 then skip to <A HREF="#win32::actacc::ao">Win32::ActAcc::AO</A>.</P>
@@ -209,32 +411,27 @@ then skip to <A HREF="#win32::actacc::ao">Win32::ActAcc::AO</A>.</P>
 <P>Obtain an ``accessible object'' representing the desktop, so you can call the object's 
 Active Accessibility methods:</P>
 <PRE>
- $accObj = Desktop();
- die unless 'Win32::ActAcc::AO' eq ref($accObj);</PRE>
+ $accObj = Desktop();</PRE>
 <P>The Desktop is a natural starting-point for traversing the tree of Accessible Objects.</P>
 <P>Once you've got an accessible object, see <A HREF="#win32::actacc::ao">Win32::ActAcc::AO</A> on how to use it.</P>
 <P>If you do not have a clear picture in mind of the accessible-object ``tree'' of 
 which Desktop is the root, go try out the <A HREF="#aadigger.pl">aaDigger.pl</A> tool.</P>
 <P>
 <H3><A NAME="accessibleobjectfromwindow">AccessibleObjectFromWindow</A></H3>
-<P>If you have an HWND, you can convert it to an Accessible Object with AccessibleObjectFromWindow:</P>
+<P>If you have an HWND, you can get an Accessible Object for it:</P>
 <PRE>
- $accObj = AccessibleObjectFromWindow($hwnd);
- die unless 'Win32::ActAcc::AO' eq ref($accObj);</PRE>
+ $accObj = AccessibleObjectFromWindow($hwnd);</PRE>
 <P>AccessibleObjectFromWindow's optional second parameter defaults to OBJID_WINDOW.  
-Win32::ActAcc defines all the OBJID constants for Perl.  (They come from WinAble.h.)
 See <A HREF="#objid constants">OBJID constants</A>.</P>
 <P>
 <H3><A NAME="accessibleobjectfrompoint">AccessibleObjectFromPoint</A></H3>
 <P>AccessibleObjectFromPoint checks the screen at the specified point and returns
-an accessible object representing the interactive item at that location.</P>
+the foremost accessible object occupying that location.</P>
 <PRE>
  my $accObj = AccessibleObjectFromPoint($x, $y);</PRE>
 <P>Speaking of ($x, $y), how do you figure out where the mouse is?  You can 
 subscribe to the WinEvents stream and watch for mouse location-change events.
 See sample aaEvents.pl to see how this works.</P>
-<P>Not all ``accessible'' objects are in the Desktop-rooted hierarchy.  Therefore, 
-AccessibleObjectFromPoint may be the only way to access some ``accessible'' objects.</P>
 <P>
 <H3><A NAME="click">click</A></H3>
 <PRE>
@@ -253,99 +450,48 @@ as flexible.</P>
 <H3><A NAME="getstatetext">GetStateText</A></H3>
 <P>Returns localized name of a state-number.</P>
 <PRE>
- my $statebit = Win32::ActAcc::STATE_SYSTEM_FOCUSED();
+ my $statebit = STATE_SYSTEM_FOCUSED();
  my $statename = Win32::ActAcc::GetStateText($statebit);</PRE>
-<P>Active Accessibility weirdness note:  States are <EM>combinations</EM>
-of state-bits such as STATE_SYSTEM_FOCUSED (see <A HREF="#state constants">STATE constants</A>).  
-GetStateText returns the name of 
-only one of the bits that are set in the argument.
-If you want a quick way to get the <EM>whole</EM> truth about 
-<EM>all</EM> the bits that are set, call <A HREF="#getstatetextcomposite">GetStateTextComposite</A> instead.</P>
+<P>Normally, you'll want to call GetStateTextComposite instead, since GetStateText works with only one state bit.
+States are <EM>combinations</EM>
+of state-bits such as STATE_SYSTEM_FOCUSED (see <A HREF="#state constants">STATE constants</A>).</P>
 <P>
 <H3><A NAME="getstatetextcomposite">GetStateTextComposite</A></H3>
 <P>Returns a localized string of state texts, representing all of the turned-on state
-bits in the argument.</P>
+bits in the argument.  <A HREF="#describe">describe</A> uses GetStateTextComposite.</P>
 <PRE>
  $stateDesc = Win32::ActAcc::GetStateTextComposite( $accObj-&gt;get_accState() );</PRE>
 <P>
 <H3><A NAME="stateconstantname">StateConstantName</A></H3>
+<PRE>
+ my $n = Win32::ActAcc::StateConstantName(STATE_SYSTEM_INVISIBLE());</PRE>
 <P>Returns the C constant name for a state-bit defined in OleAcc.h (see <A HREF="#state constants">STATE constants</A>).</P>
 <P>
 <H3><A NAME="objectidconstantname">ObjectIdConstantName</A></H3>
-<P>Returns the C constant name for an object ID defined in OleAcc.h.</P>
-<P>
-<H3><A NAME="nav">nav</A></H3>
-<P>nav finds a child Accessible Object by following a path from a starting point.
-The path specifies the name and/or role of each object along the path.</P>
-<P>You can use nav to find the Start button.  Giving undef as the starting point makes
-nav begin with the Desktop.</P>
 <PRE>
- $btnStart = Win32::ActAcc::nav(Desktop(), [ &quot;{window}&quot;, &quot;{window}Start&quot;, &quot;{push button}Start&quot; ] );</PRE>
-<P>nav is also useful finding a control on a dialog:</P>
-<PRE>
- $accObjOk = Win32::ActAcc::nav($accObjDlg, [ &quot;OK&quot; ]);</PRE>
+ my $objname = Win32::ActAcc::ObjectIdConstantName($$e{'idObject'});</PRE>
+<P>Returns the C constant name for an object ID defined in OleAcc.h (see <A HREF="#objid constants">OBJID constants</A>).</P>
 <P>
-<H3><A NAME="menupick">menuPick</A></H3>
-<P>menuPick traverses a menu (starting with a menu bar), making a list of choices.
-Each choice is a regexp that must match one menu item.
-Right before making the final choice, menuPick activates your event monitor,
-so you can catch the consequences of the menu choice.</P>
-<PRE>
- my $menubar = ...
- my $ehDlg = Win32::ActAcc::createEventMonitor(0);
- menuPick($menubar, +[ qr/Format/, qr/Font/ ], \$ehDlg);
- $ehDlg-&gt;waitForEvent(
-   +{ 'event'=&gt;Win32::ActAcc::EVENT_SYSTEM_DIALOGSTART() });</PRE>
-<P>(Note:  menuPick is still experimental.  It works with Notepad.)</P>
+<H3><A NAME="waitforevent (win32::actacc)">waitForEvent (Win32::ActAcc)</A></H3>
+<P>Waits for an event, using the default event cursor.  See the <A HREF="#waitforevent">waitForEvent</A> method of Win32::ActAcc::EventMonitor.</P>
 <P>
-<H3><A NAME="childid_self and lots of other constants">CHILDID_SELF and lots of other constants</A></H3>
-<P>Use Win32::ActAcc constants as though they were functions:</P>
-<PRE>
- die unless (0 == Win32::ActAcc::CHILDID_SELF());</PRE>
-<P>Win32::ActAcc provides the following Active Accessibility constants
-in addition to CHILDID_SELF and CCHILDREN_FRAME:</P>
+<H3><A NAME="clearevents (win32::actacc)">clearEvents (Win32::ActAcc)</A></H3>
+<P>Discards any unconsumed events on the default event cursor.  See the <A HREF="#clear">clear</A> method of Win32::ActAcc::EventMonitor.</P>
 <P>
-<H4><A NAME="event constants">EVENT constants</A></H4>
-<font face="Arial Narrow" size="-1"><P>EVENT_SYSTEM_SOUND, EVENT_SYSTEM_ALERT, EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_MENUSTART, EVENT_SYSTEM_MENUEND, EVENT_SYSTEM_MENUPOPUPSTART, EVENT_SYSTEM_MENUPOPUPEND, EVENT_SYSTEM_CAPTURESTART, EVENT_SYSTEM_CAPTUREEND, EVENT_SYSTEM_MOVESIZESTART, EVENT_SYSTEM_MOVESIZEEND, EVENT_SYSTEM_CONTEXTHELPSTART, EVENT_SYSTEM_CONTEXTHELPEND, EVENT_SYSTEM_DRAGDROPSTART, EVENT_SYSTEM_DRAGDROPEND, EVENT_SYSTEM_DIALOGSTART, EVENT_SYSTEM_DIALOGEND, EVENT_SYSTEM_SCROLLINGSTART, EVENT_SYSTEM_SCROLLINGEND, EVENT_SYSTEM_SWITCHSTART, EVENT_SYSTEM_SWITCHEND, EVENT_SYSTEM_MINIMIZESTART, EVENT_SYSTEM_MINIMIZEEND, EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_SHOW, EVENT_OBJECT_HIDE, EVENT_OBJECT_REORDER, EVENT_OBJECT_FOCUS, EVENT_OBJECT_SELECTION, EVENT_OBJECT_SELECTIONADD, EVENT_OBJECT_SELECTIONREMOVE, EVENT_OBJECT_SELECTIONWITHIN, EVENT_OBJECT_STATECHANGE, EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_DESCRIPTIONCHANGE, EVENT_OBJECT_VALUECHANGE, EVENT_OBJECT_PARENTCHANGE, EVENT_OBJECT_HELPCHANGE, EVENT_OBJECT_DEFACTIONCHANGE, EVENT_OBJECT_ACCELERATORCHANGE</P>
-</font><P>
-<H4><A NAME="objid constants">OBJID constants</A></H4>
-<font face="Arial Narrow" size="-1"><P>OBJID_WINDOW, OBJID_SYSMENU, OBJID_TITLEBAR, OBJID_MENU, OBJID_CLIENT, OBJID_VSCROLL, OBJID_HSCROLL, OBJID_SIZEGRIP, OBJID_CARET, OBJID_CURSOR, OBJID_ALERT, OBJID_SOUND</P>
-</font><P>
-<H4><A NAME="state constants">STATE constants</A></H4>
-<font face="Arial Narrow" size="-1"><P>STATE_SYSTEM_NORMAL, STATE_SYSTEM_UNAVAILABLE, STATE_SYSTEM_SELECTED, STATE_SYSTEM_FOCUSED, STATE_SYSTEM_PRESSED, STATE_SYSTEM_CHECKED, STATE_SYSTEM_MIXED, STATE_SYSTEM_INDETERMINATE, STATE_SYSTEM_READONLY, STATE_SYSTEM_HOTTRACKED, STATE_SYSTEM_DEFAULT, STATE_SYSTEM_EXPANDED, STATE_SYSTEM_COLLAPSED, STATE_SYSTEM_BUSY, STATE_SYSTEM_FLOATING, STATE_SYSTEM_MARQUEED, STATE_SYSTEM_ANIMATED, STATE_SYSTEM_INVISIBLE, STATE_SYSTEM_OFFSCREEN, STATE_SYSTEM_SIZEABLE, STATE_SYSTEM_MOVEABLE, STATE_SYSTEM_SELFVOICING, STATE_SYSTEM_FOCUSABLE, STATE_SYSTEM_SELECTABLE, STATE_SYSTEM_LINKED, STATE_SYSTEM_TRAVERSED, STATE_SYSTEM_MULTISELECTABLE, STATE_SYSTEM_EXTSELECTABLE, STATE_SYSTEM_ALERT_LOW, STATE_SYSTEM_ALERT_MEDIUM, STATE_SYSTEM_ALERT_HIGH, STATE_SYSTEM_PROTECTED, STATE_SYSTEM_VALID</P>
-</font><P>
-<H4><A NAME="role constants">ROLE constants</A></H4>
-<font face="Arial Narrow" size="-1"><P>ROLE_SYSTEM_TITLEBAR, ROLE_SYSTEM_MENUBAR, ROLE_SYSTEM_SCROLLBAR, ROLE_SYSTEM_GRIP, ROLE_SYSTEM_SOUND, ROLE_SYSTEM_CURSOR, ROLE_SYSTEM_CARET, ROLE_SYSTEM_ALERT, ROLE_SYSTEM_WINDOW, ROLE_SYSTEM_CLIENT, ROLE_SYSTEM_MENUPOPUP, ROLE_SYSTEM_MENUITEM, ROLE_SYSTEM_TOOLTIP, ROLE_SYSTEM_APPLICATION, ROLE_SYSTEM_DOCUMENT, ROLE_SYSTEM_PANE, ROLE_SYSTEM_CHART, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_BORDER, ROLE_SYSTEM_GROUPING, ROLE_SYSTEM_SEPARATOR, ROLE_SYSTEM_TOOLBAR, ROLE_SYSTEM_STATUSBAR, ROLE_SYSTEM_TABLE, ROLE_SYSTEM_COLUMNHEADER, ROLE_SYSTEM_ROWHEADER, ROLE_SYSTEM_COLUMN, ROLE_SYSTEM_ROW, ROLE_SYSTEM_CELL, ROLE_SYSTEM_LINK, ROLE_SYSTEM_HELPBALLOON, ROLE_SYSTEM_CHARACTER, ROLE_SYSTEM_LIST, ROLE_SYSTEM_LISTITEM, ROLE_SYSTEM_OUTLINE, ROLE_SYSTEM_OUTLINEITEM, ROLE_SYSTEM_PAGETAB, ROLE_SYSTEM_PROPERTYPAGE, ROLE_SYSTEM_INDICATOR, ROLE_SYSTEM_GRAPHIC, ROLE_SYSTEM_STATICTEXT, ROLE_SYSTEM_TEXT, ROLE_SYSTEM_PUSHBUTTON, ROLE_SYSTEM_CHECKBUTTON, ROLE_SYSTEM_RADIOBUTTON, ROLE_SYSTEM_COMBOBOX, ROLE_SYSTEM_DROPLIST, ROLE_SYSTEM_PROGRESSBAR, ROLE_SYSTEM_DIAL, ROLE_SYSTEM_HOTKEYFIELD, ROLE_SYSTEM_SLIDER, ROLE_SYSTEM_SPINBUTTON, ROLE_SYSTEM_DIAGRAM, ROLE_SYSTEM_ANIMATION, ROLE_SYSTEM_EQUATION, ROLE_SYSTEM_BUTTONDROPDOWN, ROLE_SYSTEM_BUTTONMENU, ROLE_SYSTEM_BUTTONDROPDOWNGRID, ROLE_SYSTEM_WHITESPACE, ROLE_SYSTEM_PAGETABLIST, ROLE_SYSTEM_CLOCK</P>
-</font><P>
-<H4><A NAME="selflag constants">SELFLAG constants</A></H4>
-<font face="Arial Narrow" size="-1"><P>SELFLAG_NONE, SELFLAG_TAKEFOCUS, SELFLAG_TAKESELECTION, SELFLAG_EXTENDSELECTION, SELFLAG_ADDSELECTION, SELFLAG_REMOVESELECTION, SELFLAG_VALID</P>
-</font><P>
-<H4><A NAME="navdir constants">NAVDIR constants</A></H4>
-<font face="Arial Narrow" size="-1"><P>NAVDIR_MIN, NAVDIR_UP, NAVDIR_DOWN, NAVDIR_LEFT, NAVDIR_RIGHT, NAVDIR_NEXT, NAVDIR_PREVIOUS, NAVDIR_FIRSTCHILD, NAVDIR_LASTCHILD, NAVDIR_MAX</P>
-</font><P>
-<H2><A NAME="win32::actacc::ao">Win32::ActAcc::AO</A></H2>
-<P>IAccessible methods are in the Win32::ActAcc::AO package, so you can use them the
-object-oriented way.</P>
-<P>
-<H3><A NAME="comparing accessible objects">Comparing Accessible Objects</A></H3>
-<P>AO's that map to HWNDs can be compared by getting their HWNDs and comparing those.  Since AO's without HWNDs cannot 
-be compared, you will want to avoid planning algorithms that depend on comparing accessible objects.</P>
-<PRE>
- $h1 = $ao1-&gt;WindowFromAccessibleObject();
- $h2 = $ao2-&gt;WindowFromAccessibleObject();
- if ($h1 == $h2) { ... }</PRE>
-<P>You generally can't compare two AO objects directly because of the following weirdness.</P>
-<P>Active Accessibility weirdness note:  The default Active Accessibility server helper 
+<H2><A NAME="win32::actacc::ao  properties and actions">Win32::ActAcc::AO - properties and actions</A></H2>
+<P>Here are the methods on an ``accessible object''.  This package includes the IAccessible methods, some of which have funny names.</P>
+<P>Active Accessibility weirdness note:  There is no guarantee in Active Accessibility that 
+an onscreen object shall be represented by one-and-only-one IAccessible*.  In fact,
+the Active Accessibility server helper 
 built into Windows to represent standard controls 
-returns a new object in response to any query.  If an Active Accessibility client requests the same accessible GUI 
-feature several times, it gets several different IAccessible* pointers back.</P>
-<P>Win32::ActAcc always uses the same
-Perl object for any given IAccessible-and-childID pair, so if you have a stable
-server (which you probably don't), you can take advantage in Perl.</P>
+seems to generally return a new object in response to any query.  
+So, there is no sure-fire way to compare Accessible Objects.</P>
+<P>Even when an Active Accessibility server returns the same IAccessible* in response to two different calls, Win32::ActAcc may
+make them into discrete Win32::ActAcc::AO objects.</P>
 <P>
 <H3><A NAME="describe">describe</A></H3>
 <P>Produces human-readible (appropriate for debugging) description of an AO. 
-Here's an example, with the fields labeled.</P>
+It's just like what you get from the aaDigger utility.  Here's an example, with the fields labeled.</P>
 <PRE>
  window:emacs: ActAcc.pod {sizeable+moveable+focusable,(4,44,1009,663),id=0,000402e2}
  ^      ^--title/text      ^-- 'state' bits            ^               ^--ID                   
@@ -360,6 +506,7 @@ might also want to print out <CODE>describe_meta()</CODE> at least once.  It nam
 the fields.</P>
 <PRE>
  print Win32::ActAcc::AO::describe_meta();</PRE>
+<P>For outline items, <CODE>describe()</CODE> includes '&gt;' symbols corresponding to the hierarchy depth, immediately to the left of the name.</P>
 <P>
 <H3><A NAME="windowfromaccessibleobject">WindowFromAccessibleObject</A></H3>
 <P>Reverses <A HREF="#accessibleobjectfromwindow">AccessibleObjectFromWindow</A>:</P>
@@ -382,57 +529,16 @@ the same as the title of the enclosing window.</P>
 <H3><A NAME="get_accrole">get_accRole</A></H3>
 <PRE>
  $role = $accObj-&gt;get_accRole();</PRE>
-<P>Returns a number, probably one of the Active Accessibility ROLE_ constants
+<P>Returns a number, one of the Active Accessibility ROLE_ constants
 (see <A HREF="#role constants">ROLE Constants</A>).  You can convert the number
-to a string with Win32::ActAcc::GetRoleText.
+to a string with <A HREF="#getroletext">GetRoleText</A>.
 Returns undef if the object doesn't have this property.</P>
-<P>
-<H3><A NAME="accessiblechildren">AccessibleChildren</A></H3>
-<PRE>
- @ch = $accObj-&gt;AccessibleChildren();</PRE>
-<P>Returns a list of the accessible objects that are children
-of $accObj.  By default it omits the invisible children:
-the no-argument form of AccessibleChildren is short for</P>
-<PRE>
- @ch = $accObj-&gt;AccessibleChildren(Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 0);</PRE>
-<P>The first parameter is a bit mask with 1's for the bits
-that matter as criteria, and the second parameter is the bit values
-to find in each of the '1' positions in the mask.</P>
-<P>To find only the invisible
-children, you can use:</P>
-<PRE>
- @ch = $accObj-&gt;AccessibleChildren(
-    Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 
-        Win32::ActAcc::STATE_SYSTEM_INVISIBLE());</PRE>
-<P>which means that the INVISIBLE bit should be included in the comparison, and it must be 1.  
-See <A HREF="#state constants">STATE constants</A>.</P>
-<P>Active Accessibility weirdness note:  You will probably want to use <CODE>AccessibleChildren()</CODE> instead of 
-<CODE>get_accChildCount()</CODE> and get_accChild().  AccessibleChildren probably calls those
-and then improves the results.  But, AccessibleChildren frequently returns fewer
-children than get_accChildCount says it should.</P>
-<P>Active Accessibility weirdness note:  Some objects report 1 child with AccessibleChildren, yet 
-accNavigate reveals more children.  You can work around this problem by calling
-<A HREF="#navigablechildren">NavigableChildren</A> instead.  Note that NavigableChildren may have its own drawbacks.</P>
-<P>In the Active Accessibility SDK, <CODE>AccessibleChildren()</CODE> is part of
-the API, not part of IAccessible.</P>
-<P>
-<H3><A NAME="navigablechildren">NavigableChildren</A></H3>
-<P>Similar to AccessibleChildren, but uses accNavigate instead.  
-Rule of thumb:  Use AccessibleChildren unless it obviously is missing
-the children; in that case try NavigableChildren.</P>
-<PRE>
- my @ch = $menu-&gt;NavigableChildren();</PRE>
-<P>
-<H3><A NAME="get_accparent">get_accParent</A></H3>
-<PRE>
- $p = $accObj-&gt;get_accParent();</PRE>
-<P>Returns the parent object.  Returns undef if the object has no parent.</P>
 <P>
 <H3><A NAME="get_accstate">get_accState</A></H3>
 <PRE>
  $state = $accObj-&gt;get_accState();</PRE>
 <P>Returns a number composed of bits defined by the Active Accessibility STATE_ constants
-(STATE_SYSTEM_NORMAL, etc.).  See <A HREF="#getstatetext">GetStateText</A> and &lt;``GetStateTextComposite''&gt;.</P>
+(<A HREF="#state constants">STATE Constants</A>).  See <A HREF="#getstatetextcomposite">GetStateTextComposite</A>.</P>
 <P>Returns undef if the object doesn't have this property.</P>
 <P>
 <H3><A NAME="get_accvalue">get_accValue</A></H3>
@@ -448,20 +554,6 @@ text control, the outline-level of an outline item, etc.</P>
 <P>Returns the accessible object's location on the screen, in pixels.  (0,0) is
 at the top left.  Dies if the object doesn't have this property.</P>
 <P>
-<H3><A NAME="accnavigate">accNavigate</A></H3>
-<PRE>
- my $smch = $accObj-&gt;accNavigate(Win32::ActAcc::NAVDIR_FIRSTCHILD());
- while (defined($smch))
- {
-        my $n = $smch-&gt;get_accName();
-        print STDERR &quot;$n\n&quot;;
-        $smch = $smch-&gt;accNavigate(Win32::ActAcc::NAVDIR_NEXT());
- }</PRE>
-<P>Returns an Accessible Object representing one of the base object's relations.  
-Win32::ActAcc defines the family of NAVDIR constants from OleAcc.h.
-See <A HREF="#navdir constants">NAVDIR constants</A>.</P>
-<P>accNavigate does not move focus, nor perform any other action on behalf of the user.</P>
-<P>
 <H3><A NAME="get_accdescription">get_accDescription</A></H3>
 <PRE>
  $desc = $accObj-&gt;get_accDescription();</PRE>
@@ -474,15 +566,395 @@ since it appears most accessible objects don't define their description.</P>
  $help = $accObj-&gt;get_accHelp();</PRE>
 <P>Returns undef if the object doesn't have this property.</P>
 <P>
+<H3><A NAME="get_accparent">get_accParent</A></H3>
+<PRE>
+ $p = $accObj-&gt;get_accParent();</PRE>
+<P>Returns the parent object.  Returns undef if the object has no parent.</P>
+<P>
 <H3><A NAME="get_accdefaultaction">get_accDefaultAction</A></H3>
 <PRE>
  $da = $accObj-&gt;get_accDefaultAction();</PRE>
-<P>Returns undef if the object doesn't have this property.</P>
+<P>An object's default action may depend on the mouse location, which window is topmost, which shift/control keys are pressed, etc.
+Returns undef if the object doesn't have this property.</P>
 <P>
 <H3><A NAME="get_acckeyboardshortcut">get_accKeyboardShortcut</A></H3>
 <PRE>
  $ks = $accObj-&gt;get_accKeyboardShortcut();</PRE>
 <P>Returns undef if the object doesn't have this property.</P>
+<P>
+<H3><A NAME="get_accfocus">get_accFocus</A></H3>
+<PRE>
+ $f = $accObj-&gt;get_accFocus();</PRE>
+<P>
+<H3><A NAME="accdodefaultaction">accDoDefaultAction</A></H3>
+<PRE>
+ $accObj-&gt;accDoDefaultAction();</PRE>
+<P>The effect of accDoDefaultAction is supposed to reflect <A HREF="#get_accdefaultaction">get_accDefaultAction</A>.</P>
+<P>Win32::ActAcc calls a hook function before doing the default action.  Initially, the
+hook is undef, but you can install different code if you like.  The sample
+displays a record of the actions:</P>
+<PRE>
+ $Win32::ActAcc::AO::accDoDefaultActionHook = sub 
+ {
+     my $ao = shift;
+     print &quot;accDoDefaultAction(&quot;.$ao-&gt;describe().&quot;)\n&quot;;
+ };</PRE>
+<P>
+<H3><A NAME="get_itemid">get_itemID</A></H3>
+<PRE>
+ $plusOrDot = (CHILDID_SELF() == $ch[$i]-&gt;get_itemID()) ? '+' : '.';</PRE>
+<P><CODE>get_itemID()</CODE> returns the item-ID that is part of the identity of the 
+accessible object.</P>
+<P>
+<H3><A NAME="accselect">accSelect</A></H3>
+<PRE>
+ $accObj-&gt;accSelect(SELFLAG_TAKEFOCUS());</PRE>
+<P>See <A HREF="#selflag constants">SELFLAG constants</A>.</P>
+<P>
+<H3><A NAME="click (center of accessible object)">click  (center of Accessible Object)</A></H3>
+<PRE>
+ $accObj-&gt;click(\$eh);</PRE>
+<P><CODE>click()</CODE> ``clicks'' the center of the accessible object, but first, it
+activates the optional event monitor, so you can capture the consequences
+of the click.  See <A HREF="#activate">activate</A> and <A HREF="#menupick">menuPick</A>.</P>
+<P>
+<H3><A NAME="release">Release</A></H3>
+<PRE>
+ $accObj-&gt;Release();</PRE>
+<P>Accessible objects are COM objects, so each one must
+be Released when you're done with it.  
+Perl's garbage collector and Win32::ActAcc::AO 
+conspire to automatically Release the accessible objects, so you should not 
+need to call Release in your scripts.</P>
+<P>
+<H2><A NAME="win32::actacc::ao  comparison">Win32::ActAcc::AO - comparison</A></H2>
+<P>
+<H3><A NAME="match">match</A></H3>
+<P>Match is how 'drill' and 'dig' decide whether they've found what
+you are looking for.  match checks the AO against specified criteria
+and returns a true value if none of the criteria is inconsistent with
+the AO's attributes.</P>
+<PRE>
+ $b = $ao-&gt;match( CRITERIA );</PRE>
+<P>CRITERIA is flexible:</P>
+<PRE>
+ $b = $ao-&gt;match(&quot;Close&quot;); # Is AO's name exactly Close?
+ $b = $ao-&gt;match( +{'name'=&gt;&quot;Close&quot;} ); # ... using a hash.
+ #
+ $b = $ao-&gt;match(qr/Close/); # Does AO's name match that regexp?
+ $b = $ao-&gt;match( +{'name'=&gt;qr/Close/} ); # ... using a hash.
+ #
+ $b = $ao-&gt;match(&quot;{ROLE_SYSTEM_PUSHBUTTON}Close&quot;); # Is AO a pushbutton named Close?
+ $b = $ao-&gt;match(&quot;{push button}Close&quot;); # ... using localized 'role text'
+ $b = $ao-&gt;match(&quot;{Pushbutton}Close&quot;); # ... using ActAcc package name
+ $b = $ao-&gt;match( +{'role'=&gt;ROLE_SYSTEM_PUSHBUTTON(), 'name'=&gt;&quot;Close&quot;} ); # ...
+ $b = $ao-&gt;match( +{'rolename'=&gt;'Pushbutton', 'name'=&gt;&quot;Close&quot;} ); # ...
+ #
+ $b = $ao-&gt;match( sub{...} ); # Does sub($ao) return a true value?
+ $b = $ao-&gt;match( +{'code'=&gt;sub{...} } ); # ... using a hash.
+ #
+ # Find only visible windows.
+ $b = $ao-&gt;match( +{'state'=&gt;+{'mask'=&gt;STATE_SYSTEM_INVISIBLE(), 'value'=&gt;0} } ); 
+ #
+ # Find only INvisible windows.
+ $b = $ao-&gt;match( +{'state'=&gt;+{'mask'=&gt;STATE_SYSTEM_INVISIBLE(), 'value'=&gt;STATE_SYSTEM_INVISIBLE()} } );</PRE>
+<P>So you see:  For the discriminator, you can use a string, a regexp, a code reference, 
+or a hash.</P>
+<P>Only in the ``{ROLE_SYSTEM_PUSHBUTTON}Close'' case can you combine a role with a name 
+in one string.  (If you want to avoid that interpretation of the braces, use the hash instead.)</P>
+<P>Hash members:</P>
+<UL>
+<LI>
+<STRONG>rolename</STRONG> - a localized 'role text' (as though received from GetRoleText), 
+or an ActAcc package name with or without the Win32::ActAcc:: part,
+or the name of a role constant with or without the ROLE_SYSTEM_ part.
+<P></P>
+<LI>
+<STRONG>role</STRONG> - the value of a role constant.
+<P></P>
+<LI>
+<STRONG>name</STRONG> - a regexp or a string (if a string, then case matters and it must match the <EM>entire</EM> name).
+<P></P>
+<LI>
+<STRONG>state</STRONG> - a hash with 'mask' and 'value' members.  match takes the state of each AO, does
+a bitwise AND with the mask, then compares with the value.
+<P></P>
+<LI>
+<STRONG>code</STRONG> - a coderef invoked with two arguments: the subject AO (also in
+$_), and the criterion.  If your code needs additional parameters or
+needs to squirrel away information for the caller of match, use closures.  The code
+is called only if the other criteria all match.  Return a true value
+to indicate a match.
+<P></P></UL>
+<P>For those frustrating occasions where you're right and the computer is wrong,
+match can tell you what about the criteria is inconsistent with the AO.</P>
+<PRE>
+ my $reasonForMismatch;
+ $b = $ao-&gt;match( CRITERIA, \$reasonForMismatch );
+ print $reasonForMismatch;</PRE>
+<P>
+<H3><A NAME="equals">Equals</A></H3>
+<PRE>
+ my $dt = Win32::ActAcc::Desktop();
+ my $e1 = $dt-&gt;Equals($dt);
+ die unless $e1;</PRE>
+<P>Equals returns a true value if, and only if, at least one of these conditions holds.</P>
+<UL>
+<LI>
+the IAccessible* and ID of the two accessible objects both match.
+<P></P>
+<LI>
+the accessible objects both reify an HWND, and their HWNDs are equal.
+<P></P></UL>
+<P>Active Accessibility weirdness note:  Because Active Accessibility servers usually return a distinct Accessible Object for each method call,
+and not all Accessible Objects have an HWND, it's not wise to rely very heavily on Equals 
+except under not very general circumstances.</P>
+<P>There are other ways to guess about the ``equality'' of two accessible
+objects.  For example, the AONavIterator class regards $a and $b equal
+if $a-&gt;<CODE>describe()</CODE> gives the same string as $b-&gt;describe(): thereby
+taking into consideration name, role, state, location, default action,
+HWND, and whatnot.  Architectural note:  Yes, relying on <CODE>describe()</CODE> is gross.</P>
+<P>
+<H2><A NAME="win32::actacc::ao  navigation by iterator">Win32::ActAcc::AO - navigation by iterator</A></H2>
+<P>Iterators are devices that give you access to all or some of an Accessible Object's child-objects.  Win32::ActAcc's iterators
+are implemented on top of Active Accessibility, which itself does not use the iterator concept.</P>
+<P>You can use an iterator with a loop:</P>
+<PRE>
+ my $iter = $ao-&gt;iterator();
+ $iter-&gt;open();
+ my $aoi;
+ while ($aoi = $iter-&gt;nextAO())
+ {
+     print $aoi-&gt;describe() . &quot;\n&quot;;
+ }
+ $iter-&gt;close();</PRE>
+<P>Or you can use an iterator to populate a list:</P>
+<PRE>
+ my $iter = $ao-&gt;iterator();
+ my @L = $iter-&gt;all();
+ print join($_-&gt;describe(), @L) . &quot;\n&quot;;</PRE>
+<P>You can pass flags to the <CODE>iterator()</CODE> method if you have special needs:</P>
+<PRE>
+ my $iter = $ao-&gt;iterator( +{'lax'=&gt;1} ); # enumerate client's children along with client (like 'dig')
+ my $iter = $ao-&gt;iterator( +{'active'=&gt;1} ); # treat outline items and menu items hierarchically
+ my $iter = $ao-&gt;iterator( +{'perfunctory'=&gt;1} ); # use speedier AOIterator rather than AONavIterator
+ my $iter = $ao-&gt;iterator( +{'nav'=&gt;1} ); # use NavIterator rather than AONavIterator</PRE>
+<P>Active iteration on outline items, menu items, and menu buttons involves ``clicking'' on the GUI
+and could cause certain programs to take action in a way you wouldn't expect.  For example,
+using active iteration on the outline in the Windows Explorer can cause Explorer to prompt 
+you for the password to network resources, or to complain that there is no disk in your A: drive.
+Active iteration on menus doesn't work unless the menu is on the active (topmost) window.</P>
+<center><P><STRONG>Iterators</STRONG></P>
+</center><table border=1><tr><td><P>AOIterator</P>
+</td><td><P>Uses <A HREF="#accessiblechildren">AccessibleChildren</A></P>
+</td></tr><tr><td><P>NavIterator</P>
+</td><td><P>Uses <A HREF="#accnavigate">accNavigate</A>(NAVDIR_FIRSTCHILD), then repeatedly <CODE>accNavigate(NAVDIR_NEXT)</CODE></P>
+</td></tr><tr><td><P>AONavIterator</P>
+</td><td><P>Combines AOIterator with NavIterator.  The point is to find even those children that one technique
+or the other misses.  This is the default iterator for Win32::ActAcc::AO.
+This iterator considers two AO's as equal if <CODE>describe()</CODE> describes them with equal strings.
+This iterator is slow, but thorough.</P>
+</td></tr><tr><td><P>DelveClientIterator</P>
+</td><td><P>Folds an AO's <EM>client's</EM> children in with the AO's children (the title bar and whatnot),
+in effect collapsing layers of the hierarchy that sometimes seem to get underfoot.
+(Uses AONavIterator.)  This is the default iterator for Win32::ActAcc::Window.</P>
+</td></tr><tr><td><P><A HREF="#menuiterator">MenuIterator</A></P>
+</td><td><P>Follows a ``logical'' hierarchy of menu items, just as humans perceive it.  
+Default iterator for Win32::ActAcc::Menubar and Win32::ActAcc::MenuItem.</P>
+</td></tr><tr><td><P>OutlineIterator</P>
+</td><td><P>Opens, traverses and closes outline items.  
+Follows a ``logical'' hierarchy of outline items, just as humans perceive it.  
+This is the default iterator for Win32::ActAcc::Outline
+and Win32::ActAcc::OutlineItem.  (Iterating the Outline is the same as iterating its root item.)</P>
+</td></tr></table><P>Each AO has a default iterator type, which you get an instance of by calling $ao-&gt;iterator(). 
+But if you absolutely need a certain type of iterator, you can be explicit:</P>
+<PRE>
+ my $oi = new Win32::ActAcc::NavIterator($ao); # choose non-default iterator</PRE>
+<P>Only AOIterator, NavIterator, and AONavIterator are faithful to Active Accessibility's
+notion of parent/child relationships.  The other iterators fudge.  For example, 
+MenuIterator makes submenus seem to be children of menus.   OutlineIterator makes
+sub-items appear to be children of items.  DelveClientIterator makes
+controls that are technically in a window's client area, appear to be children of 
+the window itself.</P>
+<P>Only AOIterator and NavIterator are faithful to Active Accessibility's <EM>order</EM> of
+child items.  (AONavIterator comes close.)</P>
+<P>
+<H3><A NAME="menuiterator">MenuIterator</A></H3>
+<P>MenuIterator opens, traverses (with AONavIterator), and closes menus.</P>
+<P>``Opening'' a menu may not work unless the menu is in the topmost active window; it
+seems to cause the menu to actually open on-screen, as though you'd clicked it.</P>
+<P>Note: In Active Accessibility, standard menus work differently from
+custom (Office) menus, which in turn work differently from the Start
+menu.  Yuck!  But Win32::ActAcc tries to smooth over the differences,
+so they all work the same from the point of view of Perl scripts.</P>
+<P>
+<H2><A NAME="win32::actacc::ao  hunting for children and descendants">Win32::ActAcc::AO - Hunting for children and descendants</A></H2>
+<P>
+<H3><A NAME="drill">drill</A></H3>
+<P>drill takes the AO as the root of a subtree of accessible objects,
+applies a criterion to each object in the tree, and returns a list
+of the objects that match the criterion.</P>
+<PRE>
+ @list = $ao-&gt;drill( CRITERIA );
+ @list = $ao-&gt;drill( CRITERIA, OPTIONS );</PRE>
+<P>drill finds ``invisible'' objects as well as visible ones.  If you're 
+looking for something visible, remember to specify so in the criteria:</P>
+<PRE>
+ ... +{'role'=&gt;Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 
+       'name'=&gt;'', 
+       'state'=&gt;+{'mask'=&gt;Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=&gt;0}}, ...</PRE>
+<P>drill prunes menu bars and outlines unless you specify a prunes list.  That is, 
+drill normally doesn't examine the children of menu bars and outlines, since
+they require active iteration, which could cause side effects.</P>
+<PRE>
+ @btnClose = $wNotepadApp-&gt;drill( 
+        sub{    
+                my $n = $_-&gt;get_accName(); 
+                (defined($n) &amp;&amp; $n eq &quot;Close&quot;) &amp;&amp; 
+                        ($_-&gt;get_accRole() == ROLE_SYSTEM_PUSHBUTTON()) 
+        });</PRE>
+<P>You can customize drill by specifying a hash of options.  The hash keys are:</P>
+<UL>
+<LI>
+'min'=&gt;<EM>n</EM> -- make drill die if it doesn't find at least <EM>n</EM> matches.
+<P></P>
+<LI>
+'max'=&gt;<EM>n</EM> -- make drill return as soon as it finds <EM>n</EM> matches.  
+If max is 1, then drill returns a scalar value instead of a list.
+<P></P>
+<LI>
+'pruneOnMatch'=&gt;1 -- make drill not examine the children of an AO that matches.
+<P></P>
+<LI>
+'prunes'=&gt;<EM>+[CRITERIA, CRITERIA, etc.]</EM> -- 
+make drill not examine the children of an AO that matches at least one of the criteria.
+If the options hash does not have a 'prunes' key, then the default is to prune
+at Menubar and Outline objects.  To probe those, you can specify 'prunes' as an empty list.
+<P></P></UL>
+<P>
+<H3><A NAME="dig">dig</A></H3>
+<P>dig finds Accessible Objects by following a path from a starting point.
+The path specifies the criterion to match at each step.</P>
+<PRE>
+ @aos = $ao-&gt;dig( +[ CRITERIA, CRITERIA, etc. ] );
+ @aos = $ao-&gt;dig( +[ CRITERIA, CRITERIA, etc. ], +{ OPTIONS } );</PRE>
+<P>Here's one way to find the Start button.  We're telling dig to start at the desktop;
+from there, find a window (by any name), within it a window called Start, and 
+in turn within it a pushbutton called Start.  How did we know?!  We used aaDigger and went exploring.
+Humility gets you a long way in the business of automating usage of GUIs.</P>
+<PRE>
+ $btnStart = Desktop()-&gt;dig([ &quot;{window}&quot;, &quot;{window}Start&quot;, &quot;{push button}Start&quot; ] );</PRE>
+<P>dig lets you be somewhat imprecise (for example, the above quest for the Start button did not
+specify the name of the top-level window, so dig might have to hunt through several).  dig is more
+efficient, the more precise the parameters are.</P>
+<P>dig is also useful finding a control on a dialog:</P>
+<PRE>
+ $accObjOk = $accObjDlg-&gt;dig([ &quot;OK&quot; ]);</PRE>
+<P>If you like, you can specify the path as an array of hashes instead of an array of strings.
+Each hash must have a 'role' entry and a 'name' entry.  
+The role is a string like ``menu bar'', which aaDigger can tell you.  
+The name must be either a string or a regexp.</P>
+<P>dig uses the default iterator of each AO, and therefore automatically traverses ``client'' windows without being told to.  
+Windows with border ornaments typically have a title-bar, a menu-bar, and a
+``client'' area; the interesting stuff is within the client area.</P>
+<P>You can customize dig by specifying a hash of options.  The hash keys are:</P>
+<UL>
+<LI>
+'min'=&gt;<EM>n</EM> -- make dig die if it doesn't find at least <EM>n</EM> matches.
+<P></P>
+<LI>
+'max'=&gt;<EM>n</EM> -- make dig return as soon as it finds <EM>n</EM> matches.  
+If max is 1, then dig returns a scalar value instead of a list.
+<P></P>
+<LI>
+'trace'=1 -- make dig display information on STDERR about what it is doing.
+<P></P></UL>
+<P>
+<H3><A NAME="tree">tree</A></H3>
+<P>The tree method performs a depth-first traversal of the Accessible Object hierarchy.  At each 
+Accessible Object, <CODE>tree()</CODE> calls code that you specify.</P>
+<P>For example, we can display the Accessible Object hierarchy:</P>
+<PRE>
+ $ao-&gt;tree( sub{my ($ao,$tree)=@_; print ' 'x($tree-&gt;level()).$ao-&gt;describe.&quot;\n&quot;;} );</PRE>
+<P><CODE>tree()</CODE> uses the default iterator for each AO it visits.  You can supply iterator flags as a
+second argument to tree():</P>
+<PRE>
+ $ao-&gt;tree( sub{print &quot;*&quot;;}, +{'lax'=&gt;1, 'active'=&gt;1});</PRE>
+<P>What can the ``sub'' do?  It gets two arguments ($ao, $tree).  The $tree argument 
+gives access to the tree-context object, which has the following methods:</P>
+<P><STRONG>level()</STRONG> returns 0 for the root (i.e., the AO whose 'tree' method was called), 1 for the root's children, 2 for the root's grandchildren, etc.</P>
+<P><STRONG>prune()</STRONG> causes tree not to enumerate the children of $ao; to skip them and go on with $ao's siblings.</P>
+<P><STRONG>stop()</STRONG> causes tree to return to its caller without enumerating any more accessible objects.</P>
+<P>
+<H2><A NAME="win32::actacc::ao  navigation methods">Win32::ActAcc::AO - navigation methods</A></H2>
+<P>These are methods for exploiting the parent/child relationships among Accessible Objects.
+You will probably want to use the iterators instead, to get around the problems with 
+accessible-object navigation in Active Accessibility --</P>
+<UL>
+<LI>
+AccessibleChildren and accNavigate disagree -- they often return different results!
+<P></P>
+<LI>
+there is no convenient way to
+get at the ``logical children'' of a menu or outline
+<P></P>
+<LI>
+AccessibleChildren returns a list, whereas accNavigate makes you loop; you can't write a single algorithm that can work with either data source.
+<P></P></UL>
+<P>Win32::ActAcc fills in those gaps with <EM>iterator</EM> algorithms.  The iterators
+are polymorphic, so you can use them all the same way, and write your own
+algorithms that can operate on any iterator.</P>
+<P>But, in case iterators don't suit your need, here are the more primitive alternatives.</P>
+<P>
+<H3><A NAME="accessiblechildren">AccessibleChildren</A></H3>
+<PRE>
+ @ch = $accObj-&gt;AccessibleChildren();</PRE>
+<P>Returns a list of the accessible objects that are children
+of $accObj.</P>
+<P>By default, in Win32::ActAcc, AccessibleChildren omits the invisible children; that's because
+the no-argument form of AccessibleChildren is short for</P>
+<PRE>
+ @ch = $accObj-&gt;AccessibleChildren(STATE_SYSTEM_INVISIBLE(), 0);</PRE>
+<P>The first parameter is a bit mask with 1's for the bits
+that matter as criteria, and the second parameter is the bit values
+to find in each of the '1' positions in the mask.  So you can
+see that the default parameters indicate to find only the children whose
+STATE_SYSTEM_INVISIBLE state bit holds 0.</P>
+<P>To find the complement, i.e., <EM>only the invisible
+children</EM>, you can use:</P>
+<PRE>
+ @ch = $accObj-&gt;AccessibleChildren(
+    STATE_SYSTEM_INVISIBLE(), 
+    STATE_SYSTEM_INVISIBLE());</PRE>
+<P>which means that the INVISIBLE bit should be included in the comparison, and it must be 1.  
+The second parameter is 1 shifted into the bit position for STATE_SYSTEM_INVISIBLE.
+See <A HREF="#state constants">STATE constants</A>.</P>
+<P>To find all the children, visible or not, you can use:</P>
+<PRE>
+ @ch = $accObj-&gt;AccessibleChildren(0,0); # no state bit matters, so all children qualify</PRE>
+<P>Active Accessibility weirdness note:  You will probably want to use <CODE>AccessibleChildren()</CODE> instead of 
+<CODE>get_accChildCount()</CODE> and get_accChild().  AccessibleChildren probably calls those
+and then improves the results.  But, AccessibleChildren frequently returns fewer
+children than get_accChildCount says it should.</P>
+<P>Active Accessibility weirdness note:  Some objects report 1 child with AccessibleChildren, yet 
+accNavigate reveals more children.  You can work around this problem by using
+AONavIterator or NavIterator (each of which may have its own drawbacks!).</P>
+<P>In the Active Accessibility SDK, <CODE>AccessibleChildren()</CODE> is part of
+the API, not part of IAccessible.</P>
+<P>
+<H3><A NAME="accnavigate">accNavigate</A></H3>
+<PRE>
+ my $smch = $accObj-&gt;accNavigate(NAVDIR_FIRSTCHILD());
+ while (defined($smch))
+ {
+        my $n = $smch-&gt;get_accName();
+        print STDERR &quot;$n\n&quot;;
+        $smch = $smch-&gt;accNavigate(NAVDIR_NEXT());
+ }</PRE>
+<P>Returns an Accessible Object representing one of the base object's relations.  
+See <A HREF="#navdir constants">NAVDIR constants</A>.</P>
+<P>Returns undef if asked for something that does not exist, <EM>provided that the server follows the spec and returns S_FALSE in that case</EM>.</P>
+<P>accNavigate does not move focus, nor perform any other action on behalf of the user.</P>
 <P>
 <H3><A NAME="get_accchildcount">get_accChildCount</A></H3>
 <PRE>
@@ -494,81 +966,111 @@ since it appears most accessible objects don't define their description.</P>
  $ch = $accObj-&gt;get_accChild(3);</PRE>
 <P>See <A HREF="#accessiblechildren">AccessibleChildren</A>.</P>
 <P>
-<H3><A NAME="get_accfocus">get_accFocus</A></H3>
-<PRE>
- $f = $accObj-&gt;get_accFocus();</PRE>
+<H2><A NAME="ao subclasses">AO Subclasses</A></H2>
+<P>Perl scripts can treat accessible objects polymorphically, since Win32::ActAcc establishes
+a subclass for each Role of accessible object.</P>
+<P>This is how Menubar's iterator method works differently from Outline's; but from the caller's
+perspective, they do the same thing and there is no need to distinguish them.</P>
+<P>These packages derive from Win32::ActAcc::AO, inherit all its methods, and  
+are implemented using its methods.  (The Active Accessibility API
+does not have helper methods specific to certain kinds of accessible objects.)</P>
+<font face="Arial Narrow" size="-1"><table><tr><td>Role constant</td><td>ActAcc Package</td></tr><tr><td>ROLE_SYSTEM_TITLEBAR</td><td><P><A HREF="#win32::actacc::titlebar">Win32::ActAcc::Titlebar</A></P>
+</td></tr><tr><td>ROLE_SYSTEM_MENUBAR</td><td><P><A HREF="#win32::actacc::menubar">Win32::ActAcc::Menubar</A></P>
+</td></tr><tr><td>ROLE_SYSTEM_MENUITEM</td><td>Win32::ActAcc::MenuItem</td></tr><tr><td>ROLE_SYSTEM_MENUPOPUP</td><td>Win32::ActAcc::MenuPopup</td></tr><tr><td>ROLE_SYSTEM_SCROLLBAR</td><td>Win32::ActAcc::Scrollbar</td></tr><tr><td>ROLE_SYSTEM_GRIP</td><td>Win32::ActAcc::Grip</td></tr><tr><td>ROLE_SYSTEM_SOUND</td><td>Win32::ActAcc::Sound</td></tr><tr><td>ROLE_SYSTEM_CURSOR</td><td>Win32::ActAcc::Cursor</td></tr><tr><td>ROLE_SYSTEM_CARET</td><td>Win32::ActAcc::Caret</td></tr><tr><td>ROLE_SYSTEM_ALERT</td><td>Win32::ActAcc::Alert</td></tr><tr><td>ROLE_SYSTEM_WINDOW</td><td><P><A HREF="#win32::actacc::window">Win32::ActAcc::Window</A></P>
+</td></tr><tr><td>ROLE_SYSTEM_CLIENT</td><td>Win32::ActAcc::Client</td></tr><tr><td>ROLE_SYSTEM_TOOLTIP</td><td>Win32::ActAcc::Tooltip</td></tr><tr><td>ROLE_SYSTEM_APPLICATION</td><td>Win32::ActAcc::Application</td></tr><tr><td>ROLE_SYSTEM_DOCUMENT</td><td>Win32::ActAcc::Document</td></tr><tr><td>ROLE_SYSTEM_PANE</td><td>Win32::ActAcc::Pane</td></tr><tr><td>ROLE_SYSTEM_CHART</td><td>Win32::ActAcc::Chart</td></tr><tr><td>ROLE_SYSTEM_DIALOG</td><td>Win32::ActAcc::Dialog</td></tr><tr><td>ROLE_SYSTEM_BORDER</td><td>Win32::ActAcc::Border</td></tr><tr><td>ROLE_SYSTEM_GROUPING</td><td>Win32::ActAcc::Grouping</td></tr><tr><td>ROLE_SYSTEM_SEPARATOR</td><td>Win32::ActAcc::Separator</td></tr><tr><td>ROLE_SYSTEM_TOOLBAR</td><td>Win32::ActAcc::Toolbar</td></tr><tr><td>ROLE_SYSTEM_STATUSBAR</td><td>Win32::ActAcc::StatusBar</td></tr><tr><td>ROLE_SYSTEM_TABLE</td><td>Win32::ActAcc::Table</td></tr><tr><td>ROLE_SYSTEM_COLUMNHEADER</td><td>Win32::ActAcc::ColumnHeader</td></tr><tr><td>ROLE_SYSTEM_ROWHEADER</td><td>Win32::ActAcc::RowHeader</td></tr><tr><td>ROLE_SYSTEM_COLUMN</td><td>Win32::ActAcc::Column</td></tr><tr><td>ROLE_SYSTEM_ROW</td><td>Win32::ActAcc::Row</td></tr><tr><td>ROLE_SYSTEM_CELL</td><td>Win32::ActAcc::Cell</td></tr><tr><td>ROLE_SYSTEM_LINK</td><td>Win32::ActAcc::Link</td></tr><tr><td>ROLE_SYSTEM_HELPBALLOON</td><td>Win32::ActAcc::HelpBalloon</td></tr><tr><td>ROLE_SYSTEM_CHARACTER</td><td>Win32::ActAcc::Character</td></tr><tr><td>ROLE_SYSTEM_LIST</td><td>Win32::ActAcc::List</td></tr><tr><td>ROLE_SYSTEM_LISTITEM</td><td>Win32::ActAcc::ListItem</td></tr><tr><td>ROLE_SYSTEM_OUTLINE</td><td><P><A HREF="#win32::actacc::outline">Win32::ActAcc::Outline</A></P>
+</td></tr><tr><td>ROLE_SYSTEM_OUTLINEITEM</td><td><P><A HREF="#win32::actacc::outlineitem">Win32::ActAcc::OutlineItem</A></P>
+</td></tr><tr><td>ROLE_SYSTEM_PAGETAB</td><td>Win32::ActAcc::PageTab</td></tr><tr><td>ROLE_SYSTEM_PROPERTYPAGE</td><td>Win32::ActAcc::PropertyPage</td></tr><tr><td>ROLE_SYSTEM_INDICATOR</td><td>Win32::ActAcc::Indicator</td></tr><tr><td>ROLE_SYSTEM_GRAPHIC</td><td>Win32::ActAcc::Graphic</td></tr><tr><td>ROLE_SYSTEM_STATICTEXT</td><td>Win32::ActAcc::StaticText</td></tr><tr><td>ROLE_SYSTEM_TEXT</td><td>Win32::ActAcc::Text</td></tr><tr><td>ROLE_SYSTEM_PUSHBUTTON</td><td>Win32::ActAcc::Pushbutton</td></tr><tr><td>ROLE_SYSTEM_CHECKBUTTON</td><td>Win32::ActAcc::Checkbox</td></tr><tr><td>ROLE_SYSTEM_RADIOBUTTON</td><td>Win32::ActAcc::Radiobutton</td></tr><tr><td>ROLE_SYSTEM_COMBOBOX</td><td>Win32::ActAcc::Combobox</td></tr><tr><td>ROLE_SYSTEM_DROPLIST</td><td>Win32::ActAcc::DropList</td></tr><tr><td>ROLE_SYSTEM_PROGRESSBAR</td><td>Win32::ActAcc::ProgressBar</td></tr><tr><td>ROLE_SYSTEM_DIAL</td><td>Win32::ActAcc::Dial</td></tr><tr><td>ROLE_SYSTEM_HOTKEYFIELD</td><td>Win32::ActAcc::HotKeyField</td></tr><tr><td>ROLE_SYSTEM_SLIDER</td><td>Win32::ActAcc::Slider</td></tr><tr><td>ROLE_SYSTEM_SPINBUTTON</td><td>Win32::ActAcc::SpinButton</td></tr><tr><td>ROLE_SYSTEM_DIAGRAM</td><td>Win32::ActAcc::Diagram</td></tr><tr><td>ROLE_SYSTEM_ANIMATION</td><td>Win32::ActAcc::Animation</td></tr><tr><td>ROLE_SYSTEM_EQUATION</td><td>Win32::ActAcc::Equation</td></tr><tr><td>ROLE_SYSTEM_BUTTONDROPDOWN</td><td>Win32::ActAcc::ButtonDropDown</td></tr><tr><td>ROLE_SYSTEM_BUTTONMENU</td><td>Win32::ActAcc::ButtonMenu</td></tr><tr><td>ROLE_SYSTEM_BUTTONDROPDOWNGRID</td><td>Win32::ActAcc::ButtonDropDownGrid</td></tr><tr><td>ROLE_SYSTEM_WHITESPACE</td><td>Win32::ActAcc::Whitespace</td></tr><tr><td>ROLE_SYSTEM_PAGETABLIST</td><td>Win32::ActAcc::PageTabList</td></tr><tr><td>ROLE_SYSTEM_CLOCK</td><td>Win32::ActAcc::Clock</td></tr></table></font><P>
+<H3><A NAME="win32::actacc::window">Win32::ActAcc::Window</A></H3>
 <P>
-<H3><A NAME="accdodefaultaction">accDoDefaultAction</A></H3>
-<PRE>
- $accObj-&gt;accDoDefaultAction();</PRE>
-<P>Active Accessibility weirdness note:  Sometimes doesn't do anything.</P>
+<H4><A NAME="mainmenu">mainMenu</A></H4>
+<P>Returns an AO for the main menu in the window.  Dies if there isn't one.  
+This method relies on the characteristic ``name'' of the menus served by the default
+Active Accessibility in Windows.  Apps that make their own custom menus,
+such as Microsoft Word, may call the menu something different, in which
+case mainMenu won't find it.</P>
 <P>
-<H3><A NAME="get_itemid">get_itemID</A></H3>
-<PRE>
- $plusOrDot = (Win32::ActAcc::CHILDID_SELF() == $ch[$i]-&gt;get_itemID()) ? '+' : '.';</PRE>
-<P><CODE>get_itemID()</CODE> returns the item-ID that is part of the identity of the 
-accessible object.</P>
+<H4><A NAME="systemmenu">systemMenu</A></H4>
+<P>Returns an AO for the system menu in the window.  Dies if there isn't one.  The system menu is the inobtrusive
+thingy in the title bar, which if you click it shows you choices including Close, Maximize, etc.</P>
 <P>
-<H3><A NAME="accselect">accSelect</A></H3>
-<PRE>
- $accObj-&gt;accSelect(Win32::ActAcc::SELFLAG_TAKEFOCUS());</PRE>
-<P>See <A HREF="#selflag constants">SELFLAG constants</A>.</P>
+<H4><A NAME="titlebar">titlebar</A></H4>
+<P>Returns an AO for the window's titlebar.  Dies if it doesn't have one.</P>
 <P>
-<H3><A NAME="click">click</A></H3>
-<PRE>
- $accObj-&gt;click(\$eh);</PRE>
-<P><CODE>click()</CODE> ``clicks'' the center of the accessible object, but first, it
-activates the optional event monitor, so you can capture the consequences
-of the click.  See <A HREF="#activate">activate</A> and <A HREF="#menupick">menuPick</A>.</P>
+<H4><A NAME="menupick (for win32::actacc::window)">menuPick (for Win32::ActAcc::Window)</A></H4>
+<P>Invokes a command from the application's main menu bar.  See <A HREF="#menupick">menuPick</A> for Menubar.</P>
 <P>
-<H3><A NAME="finddescendant">findDescendant</A></H3>
-<P>Applies a code-ref or regexp to each child, grand-child, etc.  
-In scalar context, returns the first
-Accessible Object for which the code-ref returns a true value,
-or for which the regexp indicates a match.  In array context, returns 
-a list of all matching Accessible Objects.</P>
-<PRE>
- $btnClose = $wNotepadApp-&gt;findDescendant( 
-        sub{    
-                my $n = $_-&gt;get_accName(); 
-                (defined($n) &amp;&amp; $n eq &quot;Close&quot;) &amp;&amp; 
-                        ($_-&gt;get_accRole() == Win32::ActAcc::ROLE_SYSTEM_PUSHBUTTON()) 
-        });</PRE>
+<H3><A NAME="win32::actacc::titlebar">Win32::ActAcc::Titlebar</A></H3>
 <P>
-<H3><A NAME="release">Release</A></H3>
+<H4><A NAME="btnmaximize">btnMaximize</A></H4>
+<P>
+<H4><A NAME="btnminimize">btnMinimize</A></H4>
+<P>
+<H4><A NAME="btnclose">btnClose</A></H4>
+<P>
+<H4><A NAME="btnrestore">btnRestore</A></H4>
+<P>
+<H3><A NAME="win32::actacc::menuitem">Win32::ActAcc::MenuItem</A></H3>
+<P>
+<H4><A NAME="menupick">menuPick</A></H4>
 <PRE>
- $accObj-&gt;Release();</PRE>
-<P>Accessible objects are COM objects, so each one must
-be Released when you're done with it.  
-Perl's garbage collector and Win32::ActAcc::AO 
-conspire to automatically Release the accessible objects, so you should not 
-need to call Release in your scripts.</P>
+ $aoNotepad-&gt;menuPick(+[&quot;File&quot;, &quot;Exit&quot;]);</PRE>
+<P>menuPick uses the same CRITERIA as <A HREF="#dig">the dig manpage</A>.  You can specify each step as a string, a regexp, a CODE block, a hash, and whatnot.</P>
+<P>menuPick will not find menu items that are hidden since they are so boring that you have not chosen them recently.  So, 
+before you run a script that relies on menuPick, you should ``prime'' the menu items the script will need, if they've
+disappeared.</P>
+<P>menuPick will not find menu items that are scrolled out of view.</P>
+<P>
+<H3><A NAME="win32::actacc::outline">Win32::ActAcc::Outline</A></H3>
+<P>
+<H4><A NAME="getroot">getRoot</A></H4>
+<PRE>
+ my $rootitem = $outline-&gt;getRoot();</PRE>
+<P>The root item is the top item in the outline.  It is also the only
+item at the lowest outline-level in the outline.</P>
+<P>Active Accessibility weirdness note:  Outline items are all peers,
+from the point of view of Active Accessibility.  They are all directly 
+children of the outline object.  Hierarchy resides in the <EM>value</EM> of 
+an outline item.  Higher values nest inside lower values.  Relatedly,
+the dig, drill, AccessibleChildren, etc., methods are not useful 
+for traversing an outline.</P>
+<P>
+<H3><A NAME="win32::actacc::outlineitem">Win32::ActAcc::OutlineItem</A></H3>
+<P>
+<H4><A NAME="getlevel">getLevel</A></H4>
+<P>Returns the outline-level of the outline item.  
+The level is the Active Accessibility ``value'' of the item; this method just improves
+the legibility of scripts that would otherwise be calling get_accValue.</P>
+<P>Outer levels appear to have lower numbers than inner levels.</P>
 <P>
 <H2><A NAME="winevents">WinEvents</A></H2>
-<P>WinEvents allow a script to keep apprised of windows appearing, disappearing, moving around, and
-so forth; and thereby to react to the consequences of an action.</P>
-<P>For example, the
-script can press Start and then, by watching the event stream, latch onto the menu that comes up.</P>
-<P>To watch the event stream, call <CODE>createEventMonitor()</CODE> and then use the 
-EventMonitor's <CODE>waitForEvent()</CODE> or <CODE>getEvent()</CODE> method.  Refer to the aaEvents sample.</P>
-<P>See also <A HREF="#event details">Event Details</A>.</P>
+<P>Using WinEvents, a Perl script can detect the consequences of its actions.  
+For example, having ``started'' Notepad, the script must wait until Notepad comes up
+and latch onto the new Notepad window (as opposed to some pre-existing Notepad window) 
+before typing stuff into it.</P>
+<P>Windows is continually emitting ``events'' such as EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, etc (see <A HREF="#event constants">EVENT constants</A>).
+The ActAcc DLL receives these events and stores them in a circular buffer.
+Perl scripts may poll that buffer using Win32::ActAcc::EventMonitor.
+An EventMonitor is a cursor (or iterator) on the stream of events.</P>
+<P>Normally you'll use the default EventMonitor.  If you need more than one cursor on the stream of events,
+you can call <A HREF="#createeventmonitor">createEventMonitor</A> to make a new event cursor.  Refer to the aaEvents sample.</P>
+<P>Each Perl process with an active EventMonitor installs an Active
+Accessibility ``in-proc'' event hook that records all events in a
+fixed-size circular buffer.  There's no overrun indicator on the circular
+buffer, so try to keep your EventMonitors reasonably up-to-date 
+if it's important not to miss any events.  
+Circular buffer size (in events) for this build of ActAcc:</P>
+<font face="Arial Narrow" size="-1"><P>5000</P>
+</font><P>EventMonitors don't seem to pick up any WinEvents from <EM>Command Prompt</EM>
+windows in Windows 2000.  Perhaps these windows are owned by a process that resists
+in-proc event hooks.  Hmm.</P>
 <P>
 <H3><A NAME="createeventmonitor">createEventMonitor</A></H3>
 <PRE>
  my $ehDlg = createEventMonitor(1);</PRE>
 <P>createEventMonitor creates a Win32::ActAcc::EventMonitor object,
 which the script can poll for WinEvents using <CODE>waitForEvent()</CODE> or getEvent().</P>
-<P>The ``1'' means the EventMonitor is immediately activated.  Otherwise
-the EventMonitor is latent until activated, which typically happens in
-one of two ways:</P>
-<UL>
-<LI>
-you call <A HREF="#activate">activate</A>.
-<P></P>
-<LI>
-you call a method (like click or <A HREF="#menupick">menuPick</A>) that activates the monitor so you
-can capture the results of the click.
-<P></P></UL>
+<P>The ``1'' means the EventMonitor is immediately activated, which is how 
+you generally want it.</P>
 <P>
 <H3><A NAME="eventmonitor">EventMonitor</A></H3>
 <P>Here are the methods on the EventMonitor object you get from createEventMonitor.</P>
@@ -580,17 +1082,17 @@ what will happen, but you want to find out which Accessible Object it happens to
 <P>Here's a sample of how to wait (for up to 30 seconds) for a Notepad window to appear.</P>
 <PRE>
  $aoNotepad = $eh-&gt;waitForEvent(
-  +{ 'event'=&gt;Win32::ActAcc::EVENT_OBJECT_SHOW(),
+  +{ 'event'=&gt;EVENT_OBJECT_SHOW(),
      'name'=&gt;qr/Notepad/,
-     'role'=&gt;Win32::ActAcc::ROLE_SYSTEM_WINDOW() }, 30);</PRE>
+     'role'=&gt;ROLE_SYSTEM_WINDOW() }, 30);</PRE>
 <P>waitForEvent blocks the script until a matching event arrives, or the
 timeout expires.  The return value is the accessible object of the
 winning event, or undef if the timeout expired.  So: You see how the
 sample cunningly not only learns <EM>that</EM> a Notepad windows has
 appeared, but actually gets its Accessible Object for later use (such
 as to <EM>close</EM> the window).</P>
-<P>You can omit the timeout, in which case waitForEvent waits for a
-matching event, which might mean waiting a very long time indeed.</P>
+<P>You can omit the timeout, in which case waitForEvent patiently waits for a
+matching event... which might never arrive.</P>
 <P>The hash's entries are:</P>
 <UL>
 <LI>
@@ -602,19 +1104,61 @@ accessible object of the event.  If it's a string, it must match
 exactly--case matters and it must match the entire name.
 <P></P>
 <LI>
-<STRONG>role</STRONG> (optional):  a role constant that must match the accessible object of the event, e.g., Win32::ActAcc::ROLE_SYSTEM_WINDOW().  See <A HREF="#role constants">ROLE Constants</A>.
+<STRONG>role</STRONG> (optional):  a role constant that must match the accessible object of the event, e.g., ROLE_SYSTEM_WINDOW().  See <A HREF="#role constants">ROLE Constants</A>.
+<P></P>
+<LI>
+<STRONG>hwnd</STRONG> (optional):  only events on the specified HWND match.
+<P></P>
+<LI>
+<STRONG>aoToEqual</STRONG> (optional):  only events on the specified AO (according to <A HREF="#equals">Equals</A>) match.
+If you're waiting for EVENT_OBJECT_DESTROY, use the ``hwnd'' member instead of aoToEqual.
+<P></P>
+<LI>
+<STRONG>code</STRONG> (optional):  a CODE block that takes one argument, the event.  
+Only events where the code block returns a true value match.
 <P></P></UL>
 <P>If your desires don't fit the hash mold, you can give a code-reference
 instead.  waitForEvent returns when the code returns any non-undef.
 waitForEvent returns what the code returned.</P>
 <PRE>
  $eh-&gt;waitForEvent(sub{print Win32::ActAcc::Event::evDescribe(@_).&quot;\n&quot;;undef}, $secs);</PRE>
+<P>You can find out whether the event is <EM>already</EM> in the circular buffer (and not already
+retrieved by this EventMonitor) by specifying 0 for
+the timeout.</P>
+<P>
+<H4><A NAME="eventloop">eventLoop</A></H4>
+<P>eventLoop is like waitForEvent, but takes a reference to a LIST of event criteria 
+whereas waitForEvent takes just one.</P>
+<P>To decide between waitForEvent and eventLoop, you may:</P>
+<UL>
+<LI>
+Always use eventLoop, the more flexible.
+<P></P>
+<LI>
+Model your need in the form of one of these three English sentences:  
+(1) ``Stand here and wait for
+a guy wearing an orange hat'', 
+(2a) ``Stand here and wait until you see either a guy wearing an orange hat or a kangaroo with a lollypop'',
+(2b) ``Stand here until the alligator eats the butterfly and greet each kangaroo that passes by wearing an orange hat''.
+Sentences 2a and 2b would require eventLoop.
+<P></P></UL>
+<PRE>
+ $eh-&gt;eventLoop( +[ EVENTCRITERIA, EVENTCRITERIA, etc. ], $timeoutSeconds );</PRE>
+<P>You can put the event-response code into the 'code' key of the criteria hash, 
+and make that code return a false value except when the eventLoop should end.</P>
 <P>
 <H4><A NAME="getevent">getEvent</A></H4>
+<PRE>
+ my $e = $eh-&gt;getEvent();
+ if (defined($e)) { print $e-&gt;evDescribe() . &quot;\n&quot;; }</PRE>
 <P>You will usually want to use waitForEvent.  But, just in case, there <EM>is</EM> a way to 
 retrieve one event at a time.</P>
 <P>getEvent retrieves an event from the event monitor, or undef if no event is ready.</P>
-<P>The event is a blessed hash (<A HREF="#win32::actacc::event">Win32::ActAcc::Event</A>).</P>
+<P>See <A HREF="#win32::actacc::event">Win32::ActAcc::Event</A>.</P>
+<P>
+<H4><A NAME="drophistory">dropHistory</A></H4>
+<PRE>
+ $eh-&gt;dropHistory(2000); # drop all but the most recent 2 seconds' events</PRE>
 <P>
 <H4><A NAME="clear">clear</A></H4>
 <PRE>
@@ -673,7 +1217,7 @@ as described in the API documentation:</P>
  print $$e{'event'} . &quot;\n&quot;;</PRE>
 <P>``Event'' is a constant (see <A HREF="#event constants">EVENT Constants</A>).  You can test it like this:</P>
 <PRE>
- next unless Win32::ActAcc::EVENT_OBJECT_VALUECHANGE()==$$e{'event'};</PRE>
+ next unless EVENT_OBJECT_VALUECHANGE()==$$e{'event'};</PRE>
 <P>
 <H4><A NAME="getao">getAO</A></H4>
 <PRE>
@@ -682,6 +1226,9 @@ as described in the API documentation:</P>
 <P>Active Accessibility weirdness note:  
 getAO sometimes dies with an access-violation error.  
 You may want to put your calls to getAO into an eval.</P>
+<P>
+<H4><A NAME="accessibleobjectfromevent">AccessibleObjectFromEvent</A></H4>
+<P>Same as getAO.</P>
 <P>
 <H4><A NAME="evdescribe">evDescribe</A></H4>
 <PRE>
@@ -698,48 +1245,76 @@ See <A HREF="#event constants">EVENT Constants</A>.</P>
 <PRE>
  my $accObj = AccessibleObjectFromEvent($$e{'hwnd'}, $$e{'idObject'}, $$e{'idChild'});</PRE>
 <P>
-<H3><A NAME="event details">Event Details</A></H3>
-<P>Each Perl process with an active EventMonitor installs an Active
-Accessibility ``in-proc'' event hook that records all events in a
-fixed-size circular buffer.</P>
-<P>All of the script's EventMonitor objects cursor through the process' lone
-circular buffer.</P>
-<P>You will want to tightly bracket the
-scope of your EventMonitor objects (or deactivate them 
-as soon as they are no longer interesting) since the event hook slows down
-your computer slightly and it's a pity to leave an event hook going when you 
-don't need it.</P>
-<P>There's no overrun indicator on the circular
-buffer, so try to keep your EventMonitors reasonably up-to-date lest
-you miss an event.</P>
-<P>EventMonitors don't seem to pick up any WinEvents from <EM>Command Prompt</EM>
-windows in Windows 2000.  Perhaps these windows are owned by a process that resists
-in-proc event hooks.  Hmm.</P>
-<P>Circular buffer size (in events) for this build of ActAcc:</P>
-<font face="Arial Narrow" size="-1"><P>5000</P>
-</font><P>
+<H2><A NAME="tuneable parameters">Tuneable Parameters</A></H2>
+<PRE>
+ $Win32::ActAcc::MenuItem::BetweenClicksToCloseThenOpen = 0.25; # seconds
+ $Win32::ActAcc::MenuItem::MenuPopupRetrospective = 750; # milliseconds
+ $Win32::ActAcc::MenuItem::MenuStartTimeout = 3; # seconds
+ $Win32::ActAcc::MenuIterator::HoverDwell = 0.25; # seconds</PRE>
+<P>
+<H2><A NAME="windows shell">Windows Shell</A></H2>
+<P>
+<H3><A NAME="startbutton">StartButton</A></H3>
+<P>StartButton obtains an ``accessible object'' representing the Start button:</P>
+<PRE>
+ $ao = Win32::ActAcc::StartButton();</PRE>
+<P>
+<H3><A NAME="startbuttonmenu">StartButtonMenu</A></H3>
+<PRE>
+ use Win32::ActAcc::Shell2000;
+ #
+ Win32::OLE-&gt;Initialize();
+ $menu = Win32::ActAcc::Shell2000::StartButtonMenu();
+ Win32::ActAcc::clearEvents();
+ $menu-&gt;menuPick([ qr/^Programs/, qr/Accessories/i, qr/Notepad/i ]);</PRE>
+<P>StartButtonMenu clicks the Start button, waits for a menu to come up, and returns the menu object.</P>
+<PRE>
+ $ao = Win32::ActAcc::StartButtonMenu();</PRE>
+<P>For working with menus, see <A HREF="#win32::actacc::menubar">Win32::ActAcc::Menubar</A>.</P>
+<P>
 <H2><A NAME="tools">Tools</A></H2>
 <P>
 <H3><A NAME="aadigger.pl">aaDigger.pl</A></H3>
 <P>aaDigger lets you navigate the hierarchy of accessible objects, 
-rooted at the Desktop window.  aaDigger has its own <A HREF="././aaDigger.html">manpage</A>.</P>
-<P>When you're planning an Active Accessibility script, aaDigger helps you get your feet
-on the ground.</P>
+rooted at the Desktop window.  With aaDigger, you can see the world
+the way ActAcc sees it -- which can be quite helpful when you are trying
+to write a Perl script.  aaDigger has its own <A HREF="././aaDigger.html">manpage</A>.</P>
+<P>You can invoke aaDigger from within a script, in case the script is getting
+to a certain point ok but you need to figure out what it should do next:</P>
+<PRE>
+ use Win32::ActAcc::aaExplorer;  
+</PRE>
+<PRE>
+
+ my $ao = ...
+ Win32::ActAcc::aaExplorer::aaExplore($ao);</PRE>
+<P>You can also invoke aaDigger's ``tree'' feature from within a script:</P>
+<PRE>
+ $ao-&gt;debug_tree();</PRE>
 <P>
 <H3><A NAME="aaevents.pl">aaEvents.pl</A></H3>
 <P>aaEvents makes a continuous display of your system's WinEvents.  
 When you're casting about for clues about which event your
 script should be keying to a real-world occurrence, aaEvents 
 can help you make up your mind.</P>
+<P>You can invoke aaEvents from within a script, in case the script is getting
+to a certain point ok but you need to figure out what it should do next:</P>
+<PRE>
+ # you must already have $eh: eg, $eh = Win32::ActAcc::createEventMonitor(1);
+ $eh-&gt;debug_spin(60);  # look at the events for 60 seconds</PRE>
 <P>
 <H3><A NAME="aawhereami.pl">aaWhereAmI.pl</A></H3>
 <P>aaWhereAmI continuously describes the accessible object under the cursor at any
 given moment.</P>
 <P>Active Accessibility weirdness note:  Not all accessible objects have
-a place in the hierarchy that has Desktop at its root.</P>
+a place in the hierarchy that has Desktop at its root.  You'll discover
+some things with aaWhereAmI that you might not find any other way.</P>
 <P>
 <HR>
 <H1><A NAME="bugs, limitations, and shortcomings">BUGS, LIMITATIONS, AND SHORTCOMINGS</A></H1>
+<P>menuPick can't choose commands that are helpfully hidden because you
+have not used them recently, nor commands that you'd have to scroll
+to expose.</P>
 <P>You can't use an ``accessible object'' with Win32::OLE.  Especially with
 Microsoft Office, it would be nice to get a ``native object model''
 IDispatch* from AccessibleObjectFromWindow, and hand it off to
@@ -747,17 +1322,28 @@ Win32::OLE to make Office-specific OLE Automation method calls.</P>
 <P>There's no overrun indicator on an EventMonitor.  You can't tell it to ignore
 mouse-move events - not even redundant or superseded ones.</P>
 <P>Win32::ActAcc probably doesn't work multi-threaded.</P>
-<P><CODE>nav()</CODE> and <CODE>findDescendant()</CODE> should accept the same path arguments.  
-And the path notation should provide a dizzying combination of XPath and
-regular-expression features.  (For XPath, see <A HREF="http://www.w3.org/TR/xpath">http://www.w3.org/TR/xpath</A>.)</P>
-<P>EventMonitors install only in-proc hooks.  Maybe that's why they don't
+<P>EventMonitors install in-proc hooks.  Maybe that's why they don't
 pick up any events from Command Prompt windows.</P>
 <P>Win32::ActAcc doesn't do Unicode.  If you run aaDigger.pl and point it
 to the Russian version of Windows Media Player, the text all comes
 back as question marks.</P>
+<P>Event monitors require Perl scripts to use a Giant Switch technique 
+that gets ugly.  A callback veneer should be applied on top.</P>
+<P>There's no ``brake pedal'' for those awkward moments when you want
+to stop or pause the script, but it keeps tearing the mouse away from you.
+(You can generally derail a script with the Secure Attention Sequence
+Ctrl+Alt+Del, since Win32::ActAcc can't operate the logon desktop.)</P>
+<P>A single IAccessible* + object ID may be referenced by innumerable
+Win32::ActAcc::AO objects.</P>
+<P>The Perl thread isn't shielded against IAccessible* calls crashing or returning nonsense data
+causing the Perl thread to crash.  (It's surprising how seldom this seems to happen!, but
+someday we should shore up the defenses.)</P>
 <P>
 <HR>
 <H1><A NAME="installation">INSTALLATION</A></H1>
+<P>You can install Win32::ActAcc by compiling it from source code, or,
+if you have ActivePerl, you can install it using PPM, in which
+case you don't need a C++ compiler.</P>
 <P>
 <H2><A NAME="installation from source code">Installation from source code</A></H2>
 <PRE>
@@ -767,6 +1353,9 @@ back as question marks.</P>
  nmake test</PRE>
 <P>Yes, you have to install it before you test it.  Otherwise it can't
 find its DLL.  Probably someone will figure out how to fix this.</P>
+<P>The test is tenuous.  It will probably work only with Windows 2000,
+since the design and operation of Notepad changes subtly from 
+version to version.  You must have Win32::GuiTest 0.6 or later.</P>
 <P>Prerequisites:</P>
 <UL>
 <LI>
@@ -778,7 +1367,7 @@ You need the July 2000 ``Platform SDK''.
 Earlier versions of the Active Accessibility SDK could give problems compiling.
 <P></P>
 <LI>
-The test suite requires Notepad.exe on the path.  Also, it requires
+The test suite requires Notepad.exe and Explorer.exe on the path.  Also, it requires
 Win32::GuiTest.
 <P></P>
 <LI>
@@ -817,14 +1406,40 @@ aaWhereAmI.bat and aaWhereAmI.pl
 <P></P>
 <LI>
 In site\lib\Win32:  aaDigger.pl, aaEvents.pl, aaWhereAmI.pl, ActAcc.pm, ActAcc.pod
+<P>In site\lib\Win32\ActAcc:  aaExplorer.pm</P>
 <P></P>
 <LI>
 In site\lib\auto\Win32\ActAcc:  ActAcc.dll, ActAccEM.dll
 <P></P></UL>
 <P>
 <HR>
+<H1><A NAME="appendix  constants">APPENDIX - CONSTANTS</A></H1>
+<P>These are the standard Active Accessibility ``constants'', made accessible to Perl scripts.
+Use Win32::ActAcc constants as though they were functions:</P>
+<PRE>
+ die unless (0 == CHILDID_SELF());</PRE>
+<P>
+<H2><A NAME="event constants">EVENT constants</A></H2>
+<font face="Arial Narrow" size="-1"><P>EVENT_SYSTEM_SOUND, EVENT_SYSTEM_ALERT, EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_MENUSTART, EVENT_SYSTEM_MENUEND, EVENT_SYSTEM_MENUPOPUPSTART, EVENT_SYSTEM_MENUPOPUPEND, EVENT_SYSTEM_CAPTURESTART, EVENT_SYSTEM_CAPTUREEND, EVENT_SYSTEM_MOVESIZESTART, EVENT_SYSTEM_MOVESIZEEND, EVENT_SYSTEM_CONTEXTHELPSTART, EVENT_SYSTEM_CONTEXTHELPEND, EVENT_SYSTEM_DRAGDROPSTART, EVENT_SYSTEM_DRAGDROPEND, EVENT_SYSTEM_DIALOGSTART, EVENT_SYSTEM_DIALOGEND, EVENT_SYSTEM_SCROLLINGSTART, EVENT_SYSTEM_SCROLLINGEND, EVENT_SYSTEM_SWITCHSTART, EVENT_SYSTEM_SWITCHEND, EVENT_SYSTEM_MINIMIZESTART, EVENT_SYSTEM_MINIMIZEEND, EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_SHOW, EVENT_OBJECT_HIDE, EVENT_OBJECT_REORDER, EVENT_OBJECT_FOCUS, EVENT_OBJECT_SELECTION, EVENT_OBJECT_SELECTIONADD, EVENT_OBJECT_SELECTIONREMOVE, EVENT_OBJECT_SELECTIONWITHIN, EVENT_OBJECT_STATECHANGE, EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_DESCRIPTIONCHANGE, EVENT_OBJECT_VALUECHANGE, EVENT_OBJECT_PARENTCHANGE, EVENT_OBJECT_HELPCHANGE, EVENT_OBJECT_DEFACTIONCHANGE, EVENT_OBJECT_ACCELERATORCHANGE</P>
+</font><P>
+<H2><A NAME="objid constants">OBJID constants</A></H2>
+<font face="Arial Narrow" size="-1"><P>OBJID_WINDOW, OBJID_SYSMENU, OBJID_TITLEBAR, OBJID_MENU, OBJID_CLIENT, OBJID_VSCROLL, OBJID_HSCROLL, OBJID_SIZEGRIP, OBJID_CARET, OBJID_CURSOR, OBJID_ALERT, OBJID_SOUND</P>
+</font><P>
+<H2><A NAME="state constants">STATE constants</A></H2>
+<font face="Arial Narrow" size="-1"><P>STATE_SYSTEM_NORMAL, STATE_SYSTEM_UNAVAILABLE, STATE_SYSTEM_SELECTED, STATE_SYSTEM_FOCUSED, STATE_SYSTEM_PRESSED, STATE_SYSTEM_CHECKED, STATE_SYSTEM_MIXED, STATE_SYSTEM_INDETERMINATE, STATE_SYSTEM_READONLY, STATE_SYSTEM_HOTTRACKED, STATE_SYSTEM_DEFAULT, STATE_SYSTEM_EXPANDED, STATE_SYSTEM_COLLAPSED, STATE_SYSTEM_BUSY, STATE_SYSTEM_FLOATING, STATE_SYSTEM_MARQUEED, STATE_SYSTEM_ANIMATED, STATE_SYSTEM_INVISIBLE, STATE_SYSTEM_OFFSCREEN, STATE_SYSTEM_SIZEABLE, STATE_SYSTEM_MOVEABLE, STATE_SYSTEM_SELFVOICING, STATE_SYSTEM_FOCUSABLE, STATE_SYSTEM_SELECTABLE, STATE_SYSTEM_LINKED, STATE_SYSTEM_TRAVERSED, STATE_SYSTEM_MULTISELECTABLE, STATE_SYSTEM_EXTSELECTABLE, STATE_SYSTEM_ALERT_LOW, STATE_SYSTEM_ALERT_MEDIUM, STATE_SYSTEM_ALERT_HIGH, STATE_SYSTEM_PROTECTED, STATE_SYSTEM_VALID</P>
+</font><P>
+<H2><A NAME="role constants">ROLE constants</A></H2>
+<font face="Arial Narrow" size="-1"><P>ROLE_SYSTEM_TITLEBAR, ROLE_SYSTEM_MENUBAR, ROLE_SYSTEM_SCROLLBAR, ROLE_SYSTEM_GRIP, ROLE_SYSTEM_SOUND, ROLE_SYSTEM_CURSOR, ROLE_SYSTEM_CARET, ROLE_SYSTEM_ALERT, ROLE_SYSTEM_WINDOW, ROLE_SYSTEM_CLIENT, ROLE_SYSTEM_MENUPOPUP, ROLE_SYSTEM_MENUITEM, ROLE_SYSTEM_TOOLTIP, ROLE_SYSTEM_APPLICATION, ROLE_SYSTEM_DOCUMENT, ROLE_SYSTEM_PANE, ROLE_SYSTEM_CHART, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_BORDER, ROLE_SYSTEM_GROUPING, ROLE_SYSTEM_SEPARATOR, ROLE_SYSTEM_TOOLBAR, ROLE_SYSTEM_STATUSBAR, ROLE_SYSTEM_TABLE, ROLE_SYSTEM_COLUMNHEADER, ROLE_SYSTEM_ROWHEADER, ROLE_SYSTEM_COLUMN, ROLE_SYSTEM_ROW, ROLE_SYSTEM_CELL, ROLE_SYSTEM_LINK, ROLE_SYSTEM_HELPBALLOON, ROLE_SYSTEM_CHARACTER, ROLE_SYSTEM_LIST, ROLE_SYSTEM_LISTITEM, ROLE_SYSTEM_OUTLINE, ROLE_SYSTEM_OUTLINEITEM, ROLE_SYSTEM_PAGETAB, ROLE_SYSTEM_PROPERTYPAGE, ROLE_SYSTEM_INDICATOR, ROLE_SYSTEM_GRAPHIC, ROLE_SYSTEM_STATICTEXT, ROLE_SYSTEM_TEXT, ROLE_SYSTEM_PUSHBUTTON, ROLE_SYSTEM_CHECKBUTTON, ROLE_SYSTEM_RADIOBUTTON, ROLE_SYSTEM_COMBOBOX, ROLE_SYSTEM_DROPLIST, ROLE_SYSTEM_PROGRESSBAR, ROLE_SYSTEM_DIAL, ROLE_SYSTEM_HOTKEYFIELD, ROLE_SYSTEM_SLIDER, ROLE_SYSTEM_SPINBUTTON, ROLE_SYSTEM_DIAGRAM, ROLE_SYSTEM_ANIMATION, ROLE_SYSTEM_EQUATION, ROLE_SYSTEM_BUTTONDROPDOWN, ROLE_SYSTEM_BUTTONMENU, ROLE_SYSTEM_BUTTONDROPDOWNGRID, ROLE_SYSTEM_WHITESPACE, ROLE_SYSTEM_PAGETABLIST, ROLE_SYSTEM_CLOCK</P>
+</font><P>
+<H2><A NAME="selflag constants">SELFLAG constants</A></H2>
+<font face="Arial Narrow" size="-1"><P>SELFLAG_NONE, SELFLAG_TAKEFOCUS, SELFLAG_TAKESELECTION, SELFLAG_EXTENDSELECTION, SELFLAG_ADDSELECTION, SELFLAG_REMOVESELECTION, SELFLAG_VALID</P>
+</font><P>
+<H2><A NAME="navdir constants">NAVDIR constants</A></H2>
+<font face="Arial Narrow" size="-1"><P>NAVDIR_MIN, NAVDIR_UP, NAVDIR_DOWN, NAVDIR_LEFT, NAVDIR_RIGHT, NAVDIR_NEXT, NAVDIR_PREVIOUS, NAVDIR_FIRSTCHILD, NAVDIR_LASTCHILD, NAVDIR_MAX</P>
+</font><P>
+<HR>
 <H1><A NAME="copyright">COPYRIGHT</A></H1>
-<P>Copyright 2001, Phill Wolf.</P>
+<P>Copyright 2001, Phill Wolf.  All rights reserved, including, without limitation, motion-picture rights.</P>
 <P>You may use Win32::ActAcc under the terms of the Artistic License, as
 specified in the README file of the Perl distribution.</P>
 <P>
@@ -834,15 +1449,28 @@ specified in the README file of the Perl distribution.</P>
 <P>
 <HR>
 <H1><A NAME="see also">SEE ALSO</A></H1>
-<P>Active Accessibility documentation.  As of this writing, it is available on 
-<A HREF="http://msdn.microsoft.com">http://msdn.microsoft.com</A> on the ``Libraries'' page:</P>
+<UL>
+<LI>
+Active Accessibility documentation.  As of this writing, it is available on 
+<A HREF="http://msdn.microsoft.com">http://msdn.microsoft.com</A> on the ``Libraries'' page:
 <PRE>
  Platform SDK
   User Interface Services
    Accessibility
     Microsoft Active Accessibility</PRE>
-<P>Win32::OLE</P>
-<P>Win32::GuiTest</P>
+<P></P>
+<LI>
+Win32::OLE
+<P></P>
+<LI>
+Win32::GuiTest
+<P></P>
+<LI>
+Net::AIM
+<P></P>
+<LI>
+``The automation imperative'' section of: Black-box Testing by Boris Beizer. Wiley, 1995.
+<P></P></UL>
 
 </BODY>
 

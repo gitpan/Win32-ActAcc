@@ -67,6 +67,45 @@ getEvent(h)
 		croakWin32Error("clear");
 
 void
+dropHistory(h, msHistoryToKeep)
+	INPUT:
+	EventMonitor *h
+        int msHistoryToKeep
+	PREINIT:
+	HWINEVENTHOOK hhook;
+        unsigned int crntTime;
+        unsigned int cutoffTime;
+	PPCODE:
+        crntTime = GetTickCount();
+        cutoffTime = crntTime - msHistoryToKeep;
+	if (!h->cons)
+		croak("EventMonitor not active");
+	hhook = h->cons->hhook;
+	if (emLock())
+	{
+		int actual = 0;
+		struct aaevt *pEventsInBuf = 0;
+		for (;;) 
+		{
+			emGetEventPtr(h->readCursorQume, 1, &actual, &pEventsInBuf);
+			if (!actual)
+				break;
+                        if (pEventsInBuf->dwmsEventTime >= cutoffTime)
+                            break; // BEFORE incrementing counter
+			h->readCursorQume += actual;
+			if (hhook == pEventsInBuf->hWinEventHook)
+				break;
+			else
+			{
+				//fprintf(stderr, "Bypassing event intended for %08lx\n", pEventsInBuf->hWinEventHook);
+			}
+		}
+		emUnlock();
+	}
+	else
+		croakWin32Error("clear");
+
+void
 clear(h)
 	INPUT:
 	EventMonitor *h

@@ -1,18 +1,17 @@
 Revision history for Perl extension Win32::ActAcc.
 
-0.1  Sat Aug 12 13:55:56 2000
+0.1  August 12, 2000
 	- original version
 
-0.2  Sat Sep 16 12:55:56 2000
-	- build ActAccEM.dll in the blib tree
+0.2  September 16, 2000
 	- installable by PPM
 
-0.4  Sat Sep 23 11:55:56 2000
-	- documentation change
-
-0.5  Sun Mar 11 20:28:22 2001
+0.5  March 11, 2001
 	- waitForEvent returns whatever your code-reference returns
 	- Desktop() function
-	- AO::describe() now includes the ID
 	- Bundle PPM package for ActivePerl
-	- Sample:  Chatbot::Eliza answers your incoming AOL Instant Messenger messages
+	- Sample: answer incoming AOL Instant Messages using Chatbot::Eliza 
+
+1.0  August 12, 2001
+	- Iterators
+	- conveniences for operating tree-views and menus

@@ -1,3 +1,25 @@
+int
+Equals(a,b)
+	INPUT:
+	ActAcc * a
+	ActAcc * b
+	CODE:
+	RETVAL = !!((a->ia == b->ia) && (a->id == b->id));
+	if (!RETVAL && a->id==CHILDID_SELF && b->id==CHILDID_SELF)
+	{
+		HRESULT hr;
+		HWND ha, hb;
+		hr = WindowFromAccessibleObject(a->ia, &ha);
+		if (SUCCEEDED(hr))
+		{
+			hr = WindowFromAccessibleObject(b->ia, &hb);
+			if (SUCCEEDED(hr))
+				RETVAL = 2*!!(ha == hb);			
+		}
+	}
+	OUTPUT:
+	RETVAL
+
 void
 Release(p)
 	INPUT:
@@ -138,7 +160,7 @@ get_accChildCount(p)
 	OUTPUT:
 	RETVAL
 
-ActAcc *
+void
 get_accChild(p, id)
 	INPUT:
 	ActAcc * p
@@ -146,24 +168,23 @@ get_accChild(p, id)
 	PREINIT:
 	HRESULT hr = S_OK;
 	IDispatch *pDispatch = 0;
+        ActAcc *pActAcc = 0;
 	VARIANT vch;
-	CODE:
+	PPCODE:
 	croakIfNullIAccessible(p);
 	if (CHILDID_SELF != p->id) 
 		croak("Item has no children");
 	VariantInit_VT_I4(&vch, id);
 	hr = IAccessible_get_accChild(p->ia, vch, &pDispatch);
 	if (S_OK == hr)
-		RETVAL = ActAcc_from_IDispatch(pDispatch);
+		pActAcc = ActAcc_from_IDispatch(pDispatch);
 	else if ((S_FALSE == hr) || (E_INVALIDARG == hr))
-		RETVAL = ActAcc_from_IAccessible(p->ia, id);
+		pActAcc = ActAcc_from_IAccessible(p->ia, id);
 	else
 	{
 		croak("Oops5");
 	}
-	OUTPUT:
-	RETVAL
-	CLEANUP:
+	XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(pActAcc), pActAcc));
 	if (pDispatch) IDispatch_Release(pDispatch);
 
 void
@@ -249,14 +270,14 @@ AccessibleChildren(p, ...)
 				
 				// Add Accessible Object to the return list
 				if (aa)
-					XPUSHs(sv_setref_pv(sv_newmortal(), "Win32::ActAcc::AO", aa));
+					XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
 
 				VariantClear(&varCh[i]);
 			}
 		}
 	}
 
-ActAcc *
+void
 get_accParent(p)
 	INPUT:
 	ActAcc * p
@@ -268,7 +289,7 @@ get_accParent(p)
 	if (CHILDID_SELF != p->id) 
 	{
 		ActAcc *aa = ActAcc_from_IAccessible(p->ia, CHILDID_SELF);
-		XPUSHs(sv_setref_pv(sv_newmortal(), "Win32::ActAcc::AO", aa));
+		XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
 	}
 	else
 	{
@@ -277,7 +298,7 @@ get_accParent(p)
 		if (S_OK == hr)
 		{
 			ActAcc *aa = ActAcc_from_IDispatch(pDispatch);
-			XPUSHs(sv_setref_pv(sv_newmortal(), "Win32::ActAcc::AO", aa));
+			XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
 			IDispatch_Release(pDispatch);
 		}
 		else if (S_FALSE == hr)
@@ -290,7 +311,7 @@ get_accParent(p)
 		}
 	}
 
-ActAcc *
+void
 get_accFocus(p)
 	INPUT:
 	ActAcc * p
@@ -312,12 +333,12 @@ get_accFocus(p)
 			if (VT_DISPATCH == v.vt)
 			{
 				ActAcc *aa = ActAcc_from_IDispatch(v.pdispVal);
-				XPUSHs(sv_setref_pv(sv_newmortal(), "Win32::ActAcc::AO", aa));
+				XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
 			}
 			else if (VT_I4 == v.vt)
 			{
 				ActAcc *aa = ActAcc_from_IAccessible(p->ia, v.lVal);
-				XPUSHs(sv_setref_pv(sv_newmortal(), "Win32::ActAcc::AO", aa));
+				XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
 			}
 			else if (VT_EMPTY == v.vt)
 			{
@@ -334,7 +355,7 @@ get_accFocus(p)
 	VariantClear(&v);
 
 void
-accDoDefaultAction(p)
+accDoDefaultAction_(p)
 	INPUT:
 	ActAcc * p
 	PREINIT:
@@ -345,7 +366,7 @@ accDoDefaultAction(p)
 	VariantInit_VT_I4(&childId, p->id);
 	hrAC = IAccessible_accDoDefaultAction(p->ia, childId);
 	if (!SUCCEEDED(hrAC))
-		croak("Egad2");
+		croakHRESULTAndWin32Error(hrAC, "accDoDefaultAction");
 
 int
 get_itemID(p)
@@ -413,7 +434,7 @@ accNavigate(p, navDir)
 	}
 	VariantClear(&varEnd);
 	if (rv)
-		XPUSHs(sv_setref_pv(sv_newmortal(), "Win32::ActAcc::AO", rv));
+		XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(rv), rv));
 	else
 		XPUSHs(&PL_sv_undef);
 

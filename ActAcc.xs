@@ -1,4 +1,4 @@
-/* Copyright 2000, Phill Wolf.  See README. */
+/* Copyright 2001, Phill Wolf.  See README. -*-Mode: c;-*-  */
 
 /* Win32::ActAcc (Active Accessibility) C-extension source file */
 
@@ -82,6 +82,14 @@ void croakWin32Error(char const *f)
 	croak(msg);
 }
 
+void croakHRESULTAndWin32Error(HRESULT hr, char const *f)
+{
+	char msg[140];
+	DWORD le = GetLastError();
+	sprintf(msg, "HRESULT=%08lx WinError=%08lx in %s", hr, le, f);
+	croak(msg);
+}
+
 void croakIf(HRESULT hr, BOOL pleaseCroak, char const *f)
 {
 	if (pleaseCroak)
@@ -135,9 +143,12 @@ ActAcc *ActAcc_new_from_IDispatch(IDispatch *pDispatch)
 	ActAcc *rv = 0;
 	IAccessible *pAccessible = 0;
 	HRESULT hr = IDispatch_QueryInterface(pDispatch, USEGUID(IID_IAccessible), (void**)&pAccessible);
+        // now we hold 1 reference to IAccessible (in addition to caller's references to IDispatch)
 	croakIf(hr, !SUCCEEDED(hr), "ActAcc_new_from_IDispatch");
 	rv = ActAcc_from_IAccessible(pAccessible, CHILDID_SELF);
+        // now we hold 2 references to IAccessible
 	IAccessible_Release(pAccessible);
+        // now we hold 1 reference to IAccessible
 	return rv;
 }
 
@@ -327,6 +338,7 @@ char *textKey(IAccessible *ia, DWORD id, accessibleKey buf)
 ActAcc *ActAcc_from_IAccessible(IAccessible *ia, DWORD id)
 {
 	ActAcc *aa = 0;
+#ifdef ACTACC_USE_STASH
 	// get stash
 	// get our hash of IAccessible+ID pairs
 	// is the requested IA+ID in the hash?
@@ -345,7 +357,9 @@ ActAcc *ActAcc_from_IAccessible(IAccessible *ia, DWORD id)
 		// cast to pointer
 	    tmp = SvIV(*ppActAcc);
 	    aa = INT2PTR(ActAccPtr,tmp);
+            SvREFCNT_inc(*ppActAcc);
 		//fprintf(stderr, "hash: %s is there: the aa* is %08lx!\n", &ak, aa);
+//TBD: Bug in the above? IAccessible->Release starts failing if we enable ACTACC_USE_STASH. See pod.
 	}
 	else
 	{
@@ -357,21 +371,28 @@ ActAcc *ActAcc_from_IAccessible(IAccessible *ia, DWORD id)
 		aa = ActAcc_new_from_IAccessible(ia, id);
 		//fprintf(stderr, "hash: %s is NOT there.. storing aa* of %08lx\n", &ak, aa);
 		tmp = (IV)aa;
-		svtmp = newSViv(tmp);
+		svtmp = newSViv(tmp); // refcount=1
 		psv = hv_store(hvStash, ak, strlen(ak), svtmp, 0);
+                SvREFCNT_inc(*psv); // refcount=2 since we stored it in hash
+                SvREFCNT_inc(*psv); // refcount=3 since we stored it in hash
 		aa = ActAcc_from_IAccessible(ia, id);
 	}
+#else
+    aa = ActAcc_new_from_IAccessible(ia, id);
+#endif
 	return aa;
 }
 
 void rmv_from_hash(ActAcc *p)
 {
+#ifdef ACTACC_USE_STASH
 	HV *hvStash = gv_stashpv("Win32::ActAcc", 0);
 	accessibleKey ak;
 	SV **ppActAcc;
 	textKey(p->ia, p->id, ak);
 	if (hvStash)
 		hv_delete(hvStash, ak, strlen(ak), G_DISCARD);
+#endif
 }
 
 // caller always responsible for freeing the IDispatch
@@ -391,6 +412,7 @@ void ActAcc_free_incl_hash(ActAcc *p)
 #ifdef MONITOR_OBJPOOL
 	fprintf(stderr, "DESTROY(%08lx)\n", p);
 #endif
+
 	if (p->ia) 
 	{
 		IAccessible_Release(p->ia);
@@ -427,7 +449,7 @@ SV *textAccessor(ActAcc *p,
 		rv = sv_2mortal(newSVpv(a,0));
 		Safefree(a);
 	}
-	else if ((S_FALSE != hr) && (DISP_E_MEMBERNOTFOUND != hr) && (E_NOTIMPL != hr))
+	else if ((S_FALSE != hr) && (DISP_E_MEMBERNOTFOUND != hr) && (E_NOTIMPL != hr) && (E_INVALIDARG != hr))
 	{
 		char w[100];
 		sprintf(w, "Error %08lx in textAccessor", hr);
@@ -687,6 +709,101 @@ void mouse_button(int x, int y, char *ops)
         }
         ops++;
     }
+}
+
+char *packageForRole(int r)
+{
+    char *rv = "Win32::ActAcc::AO";
+    switch (r) 
+    {
+#define ROLECONST2PACKAGENAME(C,P) case C:  rv = "Win32::ActAcc::" P; break;
+        ROLECONST2PACKAGENAME(ROLE_SYSTEM_TITLEBAR, "Titlebar")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_MENUBAR, "Menubar")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_SCROLLBAR, "Scrollbar")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_GRIP, "Grip")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_SOUND, "Sound")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_CURSOR, "Cursor")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_CARET, "Caret")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_ALERT, "Alert")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_WINDOW, "Window")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_CLIENT, "Client")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_MENUPOPUP, "MenuPopup")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_MENUITEM, "MenuItem")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_TOOLTIP, "Tooltip")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_APPLICATION, "Application")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_DOCUMENT, "Document")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_PANE, "Pane")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_CHART, "Chart")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_DIALOG, "Dialog")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_BORDER, "Border")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_GROUPING, "Grouping")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_SEPARATOR, "Separator")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_TOOLBAR, "Toolbar")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_STATUSBAR, "StatusBar")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_TABLE, "Table")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_COLUMNHEADER, "ColumnHeader")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_ROWHEADER, "RowHeader")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_COLUMN, "Column")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_ROW, "Row")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_CELL, "Cell")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_LINK, "Link")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_HELPBALLOON, "HelpBalloon")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_CHARACTER, "Character")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_LIST, "List")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_LISTITEM, "ListItem")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_OUTLINE, "Outline")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_OUTLINEITEM, "OutlineItem")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_PAGETAB, "PageTab")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_PROPERTYPAGE, "PropertyPage")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_INDICATOR, "Indicator")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_GRAPHIC, "Graphic")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_STATICTEXT, "StaticText")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_TEXT, "Text")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_PUSHBUTTON, "Pushbutton")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_CHECKBUTTON, "Checkbox")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_RADIOBUTTON, "Radiobutton")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_COMBOBOX, "Combobox")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_DROPLIST, "DropList")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_PROGRESSBAR, "ProgressBar")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_DIAL, "Dial")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_HOTKEYFIELD, "HotKeyField")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_SLIDER, "Slider")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_SPINBUTTON, "SpinButton")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_DIAGRAM, "Diagram")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_ANIMATION, "Animation")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_EQUATION, "Equation")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_BUTTONDROPDOWN, "ButtonDropDown")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_BUTTONMENU, "ButtonMenu")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_BUTTONDROPDOWNGRID, "ButtonDropDownGrid")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_WHITESPACE, "Whitespace")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_PAGETABLIST, "PageTabList")
+	ROLECONST2PACKAGENAME(ROLE_SYSTEM_CLOCK, "Clock")
+    }
+    return rv;
+}
+
+char *packageForAO(ActAcc *p) 
+{
+    char *rv = NULL;
+    HRESULT hr = S_OK;
+    VARIANT childid;
+    VARIANT vrole;
+    croakIfNullIAccessible(p);
+    childid.vt=VT_I4;
+    childid.lVal=p->id;
+    VariantInit(&vrole);
+    hr = IAccessible_get_accRole(p->ia, childid, &vrole);
+    if (SUCCEEDED(hr) && (vrole.vt==VT_I4))
+    {
+        rv = packageForRole(vrole.lVal);
+    }
+    else
+    {
+        rv = "Win32::ActAcc::AO";
+    }
+    VariantClear(&childid);
+    VariantClear(&vrole);
+    return rv;
 }
 
 MODULE = Win32::ActAcc		PACKAGE = Win32::ActAcc		

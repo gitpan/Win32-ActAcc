@@ -1,4 +1,4 @@
-# Copyright 2000, Phill Wolf.  See README.
+# Copyright 2001, Phill Wolf.  See README.
 
 # Win32::ActAcc (Active Accessibility) test suite
 
@@ -6,15 +6,49 @@ use strict;
 use Data::Dumper;
 use Win32::GuiTest;
 use Win32::ActAcc;
+use Win32::ActAcc::Shell2000;
 use Win32::OLE;
+use Config;
 
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
-######################### We start with some black magic to print on failure.
+# locate notepad.exe
+my @notepads = map("$_\\notepad.exe", grep(-f "$_\\notepad.exe", split(/;/,$ENV{'PATH'})));
+my $notepadexe;
+if (@notepads)
+{
+    $notepadexe = 'notepad.exe';
+}
+else
+{
+    print STDERR "\nFull path/filename of Notepad.exe? ";
+    $notepadexe = <STDIN>;
+    chomp $notepadexe;
+}
+
+# locate explorer.exe
+my @explorers = map("$_\\explorer.exe", grep(-f "$_\\explorer.exe", split(/;/,$ENV{'PATH'})));
+my $explorerexe;
+if (@explorers)
+{
+    $explorerexe = "explorer.exe";
+}
+else
+{
+    print STDERR "\nFull path/filename of Explorer.exe? ";
+    $explorerexe = <STDIN>;
+    chomp $explorerexe;
+}
+
+my $hmm;
+print STDERR "\nIs Notepad at Start->Programs->Accessories->Notepad? ";
+$hmm = <STDIN>;
+print STDERR qq(\nPlease go make sure Start->Programs->Accessories->Notepad hasn't been "helpfully" hidden.  Then press Enter. );
+$hmm = <STDIN>;
 
 my @t;
-
+push(@t, sub{&t_RoleFriendlyNameToNumber;});
 push(@t, sub{&t_Desktop;});
 push(@t, sub{&t_AccessibleObjectFromWindow_and_reverse;});
 push(@t, sub{&t_AccessibleChildren_all;});
@@ -31,6 +65,11 @@ push(@t, sub{&t_events_1;});
 push(@t, sub{&t_get_accState;});
 push(@t, sub{&t_click;});
 push(@t, sub{&t_accDoDefaultAction;});
+push(@t, sub{&t_startmenu;});
+push(@t, sub{&t_outline;});
+push(@t, sub{&t_equals;});
+
+######################### We start with some black magic to print on failure.
 
 print "1..".@t."\n";
 
@@ -50,14 +89,21 @@ for (my $i = 1; $i <= @t; $i++)
 sub expectedChildrenOfDesktop
 {
 	return +{		
-		'System'=>Win32::ActAcc::ROLE_SYSTEM_MENUBAR(),
-		''=>Win32::ActAcc::ROLE_SYSTEM_TITLEBAR(),
-		'Application'=>Win32::ActAcc::ROLE_SYSTEM_MENUBAR(),
-		'Desktop'=>Win32::ActAcc::ROLE_SYSTEM_CLIENT(),
-		'Vertical'=>Win32::ActAcc::ROLE_SYSTEM_SCROLLBAR(),
-		'Horizontal'=>Win32::ActAcc::ROLE_SYSTEM_SCROLLBAR(),
-		'Size box'=>Win32::ActAcc::ROLE_SYSTEM_GRIP(),
+		'System'=>ROLE_SYSTEM_MENUBAR(),
+		''=>ROLE_SYSTEM_TITLEBAR(),
+		'Application'=>ROLE_SYSTEM_MENUBAR(),
+		'Desktop'=>ROLE_SYSTEM_CLIENT(),
+		'Vertical'=>ROLE_SYSTEM_SCROLLBAR(),
+		'Horizontal'=>ROLE_SYSTEM_SCROLLBAR(),
+		'Size box'=>ROLE_SYSTEM_GRIP(),
 	};
+}
+
+sub t_RoleFriendlyNameToNumber
+{
+    die unless Win32::ActAcc::RoleFriendlyNameToNumber("menu bar") == Win32::ActAcc::ROLE_SYSTEM_MENUBAR;
+    die unless Win32::ActAcc::RoleFriendlyNameToNumber("ROLE_SYSTEM_MENUBAR") == Win32::ActAcc::ROLE_SYSTEM_MENUBAR;
+    "ok";
 }
 
 sub t_Desktop
@@ -77,7 +123,7 @@ sub t_AccessibleObjectFromWindow_and_reverse
 {
 	my $dt = Win32::GuiTest::GetDesktopWindow();
 	my $ia=AccessibleObjectFromWindow($dt);
-	die unless 'Win32::ActAcc::AO' eq ref($ia);
+	die unless 'Win32::ActAcc::Window' eq ref($ia);
 	my $h2=$ia->WindowFromAccessibleObject(); 
 	die unless ($dt == $h2);
 	"ok";
@@ -107,8 +153,8 @@ sub t_consts
 {
 	# confirm the constants mechanism by comparing
 	# a couple of values with their H-file values.
-	die unless 0==Win32::ActAcc::CHILDID_SELF();
-	die unless 1==Win32::ActAcc::ROLE_SYSTEM_TITLEBAR();
+	die unless 0==CHILDID_SELF();
+	die unless 1==ROLE_SYSTEM_TITLEBAR();
 	"ok";
 }
 
@@ -148,7 +194,7 @@ sub t_get_accRole
 
 sub t_StateConstantName
 {
-	my $k = Win32::ActAcc::STATE_SYSTEM_INVISIBLE();
+	my $k = STATE_SYSTEM_INVISIBLE();
 	my $n = Win32::ActAcc::StateConstantName($k);
 	#print STDERR "k=$k, n=$n\n".join("\n",keys(%Win32::ActAcc::StateName))."\n";
 	die unless 'STATE_SYSTEM_INVISIBLE' eq $n;
@@ -157,7 +203,7 @@ sub t_StateConstantName
 
 sub t_EventConstantName
 {
-	my $k = Win32::ActAcc::EVENT_OBJECT_SHOW();
+	my $k = EVENT_OBJECT_SHOW();
 	my $n = Win32::ActAcc::EventConstantName($k);
 	#print STDERR "k=$k, n=$n\n".join("\n",keys(%Win32::ActAcc::StateName))."\n";
 	die unless 'EVENT_OBJECT_SHOW' eq $n;
@@ -166,7 +212,7 @@ sub t_EventConstantName
 
 sub t_ObjectIdConstantName
 {
-	my $k = Win32::ActAcc::OBJID_WINDOW();
+	my $k = OBJID_WINDOW();
 	my $n = Win32::ActAcc::ObjectIdConstantName($k);
 	die unless 'OBJID_WINDOW' eq $n;
 	"ok";
@@ -174,11 +220,11 @@ sub t_ObjectIdConstantName
 
 sub t_GetStateTextComposite
 {
-	my $k1 = Win32::ActAcc::STATE_SYSTEM_INVISIBLE();
+	my $k1 = STATE_SYSTEM_INVISIBLE();
 	my $t1 = Win32::ActAcc::GetStateText($k1);
-	my $k2 = Win32::ActAcc::STATE_SYSTEM_SIZEABLE();
+	my $k2 = STATE_SYSTEM_SIZEABLE();
 	my $t2 = Win32::ActAcc::GetStateText($k2);
-	my $k3 = Win32::ActAcc::STATE_SYSTEM_FOCUSABLE();
+	my $k3 = STATE_SYSTEM_FOCUSABLE();
 	my $t3 = Win32::ActAcc::GetStateText($k3);
 
 	my $kc = $k1 | $k2 | $k3;
@@ -216,12 +262,13 @@ my $wNotepadApp;
 sub runNotepad
 {
 	my $rvNotepad;
-	my $eh = Win32::ActAcc::createEventMonitor(1);
-	system("start notepad");
-	$rvNotepad = $eh->waitForEvent(
-			+{ 'event'=>Win32::ActAcc::EVENT_OBJECT_SHOW(),
+
+	Win32::ActAcc::clearEvents();
+	system(qq(start $notepadexe));
+	$rvNotepad = Win32::ActAcc::waitForEvent(
+			+{ 'event'=>EVENT_OBJECT_SHOW(),
 			'name'=>qr/Notepad/,
-			'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW()});
+			'role'=>ROLE_SYSTEM_WINDOW()});
 	die unless defined($rvNotepad);
 	return $rvNotepad;
 }
@@ -237,7 +284,7 @@ sub t_get_accState
 {
 	return "skip" unless defined($wNotepadApp);
 	my $s = $wNotepadApp->get_accState();
-	my $f = Win32::ActAcc::STATE_SYSTEM_FOCUSABLE();
+	my $f = STATE_SYSTEM_FOCUSABLE();
 	#print sprintf("state=%08lx (%s)\nwant =%08lx\n", $s, Win32::ActAcc::GetStateTextComposite($s), $f);
 	die unless $s & $f;
 	"ok";
@@ -246,34 +293,28 @@ sub t_get_accState
 sub t_click
 {
 	return "skip" unless defined($wNotepadApp);
-	my $menubar = $wNotepadApp->findDescendant(
-		sub
-		{ 
-			my $n = $_->get_accName(); 
-			(defined($n) && $n eq "Application") && 
-				($_->get_accRole() == Win32::ActAcc::ROLE_SYSTEM_MENUBAR()) 
-		});
+	my $menubar = $wNotepadApp->mainMenu();
+
+        die unless defined($menubar);
 
 	# Unfortunately different versions of Notepad put Font
 	# under different menus. Figure out which we have here.
-	my $hasFormatMenu = !! $menubar->findDescendant(
-		sub
-		{ 
-			my $n = $_->get_accName(); 
-			(defined($n) && $n =~ /Format/) && 
-				($_->get_accRole() == Win32::ActAcc::ROLE_SYSTEM_MENUITEM()) 
-		});
-
+	my $hasFormatMenu = !! $menubar->dig(+['{menu item}Format'], +{'max'=>1,'min'=>0,'trace'=>0});
+#$menubar->debug_tree();
 	my $reMenu = $hasFormatMenu ? qr/Format/ : qr/Edit/;
 
 	# Make menu selection and wait for dialog box to appear.
-	my $ehDlg = Win32::ActAcc::createEventMonitor(0);
-	Win32::ActAcc::menuPick($menubar, +[ $reMenu, qr/Font/ ], \$ehDlg);
-	$ehDlg->waitForEvent(
-		+{ 'event'=>Win32::ActAcc::EVENT_SYSTEM_DIALOGSTART() });
+        $wNotepadApp->menuPick(+[ $reMenu, qr/Font/ ]);
+	my $fontdlg = Win32::ActAcc::waitForEvent(
+		+{ 'event'=>EVENT_SYSTEM_DIALOGSTART() });
 
 	# deal with dialog box.
-	Win32::GuiTest::SendKeys("{ESC}"); # close leaf menu
+        $fontdlg->findDescendant(
+                sub{
+                    my $n = $_->get_accName(); 
+                    (defined($n) && $n eq "Cancel") && 
+                    ($_->get_accRole() == ROLE_SYSTEM_PUSHBUTTON())  })->accDoDefaultAction();
+
 	"ok";
 }
 
@@ -281,8 +322,74 @@ sub t_accDoDefaultAction
 {
 	return "skip" unless defined($wNotepadApp);
 
-	my $btnClose = $wNotepadApp->findDescendant( sub{ my $n = $_->get_accName(); (defined($n) && $n eq "Close") && ($_->get_accRole() == Win32::ActAcc::ROLE_SYSTEM_PUSHBUTTON()) });
-
+	my $btnClose = 	$wNotepadApp->titlebar()->btnClose();
+        die unless defined($btnClose);
 	$btnClose->accDoDefaultAction();
+
 	"ok";
 }
+
+sub t_startmenu
+{
+	my $menu = Win32::ActAcc::Shell2000::StartButtonMenu();
+	$menu->menuPick([ qr/^Programs/, qr/Accessories/i, qr/Notepad/i ]);
+	my $rvNotepad = Win32::ActAcc::waitForEvent(
+			+{ 'event'=>EVENT_OBJECT_SHOW(),
+			'name'=>qr/Notepad/,
+			'role'=>ROLE_SYSTEM_WINDOW()});
+	die unless defined($rvNotepad);
+	my $btnClose = 	$rvNotepad->titlebar()->btnClose();
+	$btnClose->accDoDefaultAction();
+
+	"ok";
+}
+
+sub t_outline
+{
+    my $rvExplorer;
+    my $eh;
+    my $folder = $Config{'sitearchexp'} . "\\auto\\Win32\\ActAcc";
+    my ($drivepart, $folderspart) = $folder=~ /^([a-z]:)\\(.*)/i;
+    my $dpqm = quotemeta $drivepart;
+    my @folderspart = split(/\\/, $folderspart);
+    system("start $explorerexe /e,$drivepart");
+
+    $rvExplorer = Win32::ActAcc::waitForEvent(
+		    +{ 'event'=>EVENT_OBJECT_SHOW(),
+		    'name'=>uc($drivepart)."\\",
+		    'role'=>ROLE_SYSTEM_WINDOW()});
+    die unless defined($rvExplorer);
+    undef $eh;
+    
+    my $outline = $rvExplorer->findDescendant(
+        sub{ 
+	    ($_->get_accRole() == ROLE_SYSTEM_OUTLINE()) 
+        });
+    my $rootitem = $outline->getRoot();
+
+    my $outlineitem = $rootitem->outlinenav(+[qr(My Computer), qr((?i:$dpqm)), map(do{my $b = quotemeta(ucfirst($_));qr/(?i:^$b)/ },@folderspart)]);
+
+    die unless $outlineitem->get_accName() eq $folderspart[$#folderspart];
+
+    my $btnClose = $rvExplorer->titlebar()->btnClose();
+    $btnClose->accDoDefaultAction();
+
+    "ok";
+}
+
+sub t_equals
+{
+    my $dt = Win32::ActAcc::Desktop();
+    my $e1 = $dt->Equals($dt);
+    die unless $e1;
+
+    my $fdc = $dt->accNavigate(Win32::ActAcc::NAVDIR_FIRSTCHILD())->accNavigate(Win32::ActAcc::NAVDIR_FIRSTCHILD());
+    my $e2 = $dt->Equals($fdc );
+    die("HWNDs:".$dt->WindowFromAccessibleObject().",".$fdc->WindowFromAccessibleObject()) unless !$e2;
+
+    my $e3 = $dt->Equals(Win32::ActAcc::Desktop()); # their IAccessible* values will be different. yuck.
+    die unless $e3;
+
+    "ok";
+}
+

@@ -2,30 +2,108 @@ NAME
     Win32::ActAcc - `Active Accessibility' for task automation, GUI testing
 
 SYNOPSIS
-    Win32::ActAcc gives Perl scripts free run of the Active Accessibility
-    client API; IAccessible; and ``WinEvents''.
+    *   Active Accessibility client API
 
-    Active Accessibility lets Perl scripts see what's on the screen, even when
-    programs use ``custom controls'', lightweight (drawn) controls that are
-    not technically windows, and the like: VB for example.
+         use Win32::OLE;
+         use Win32::ActAcc;
+         Win32::OLE->Initialize();
+         $ao = AccessibleObjectFromPoint(320,240);
+         @children = $ao->AccessibleChildren();
+         $hwnd = $ao->WindowFromAccessibleObject();
+         $ao2 = AccessibleObjectFromWindow($hwnd);
+
+    *   IAccessible
+
+         print $ao->get_accName() . "\n";
+         print $ao->get_accValue() . "\n";
+         print $ao->get_accDefaultAction() . "\n";
+         $statebits = $ao->get_accState();
+         $rolenum = $ao->get_accRole();
+         $ch1 = $ao->accNavigate(NAVDIR_FIRSTCHILD());
+         $p = $ao->get_accParent();
+
+    *   WinEvents
+
+         $aoNotepad = Win32::ActAcc::waitForEvent(
+            +{ 'event'=>EVENT_OBJECT_SHOW(),
+               'name'=>qr/Notepad/,
+               'role'=>ROLE_SYSTEM_WINDOW()});
+
+    *   Iterators
+
+        Win32::ActAcc's iterators can drill into menus and outlines, in
+        addition to the Active Accessibility object hierarchy.
+
+         # display children of $ao
+         my $iter = $ao->iterator();
+         $iter->open();
+         my $aoi;
+         while ($aoi = $iter->nextAO())
+         {
+             print $aoi->describe() . "\n";
+         }
+         $iter->close();
+
+    *   Finding accessible objects
+
+         # find any descendant
+         $notepadTextArea = $aoNotepad->drill("{editable text}", +{'max'=>1, 'min'=>1});
+
+         # find immediate child
+         $AimConversation = $aoIM->dig( +[ +{'role'=>ROLE_SYSTEM_WINDOW(), 'name'=>qr/\<HTML\>/ } ] );
+
+         # follow path
+         $tray = Win32::ActAcc::Desktop()->dig([ 
+                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=>'', 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}}, 
+                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=>'', 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}}, 
+                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=>'', 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}}, 
+                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=>'Tray', 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}}, 
+                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_PAGETABLIST(), 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}} ], 
+                +{'max'=>1,'min'=>1} );
+
+    *   Task-automation conveniences
+
+         use Win32::OLE;
+         use Win32::ActAcc;
+         use Win32::ActAcc::Shell2000;
+         #
+         Win32::OLE->Initialize();
+         $menu = Win32::ActAcc::Shell2000::StartButtonMenu();
+         Win32::ActAcc::clearEvents();
+         $menu->menuPick([ qr/^Programs/, qr/Accessories/i, qr/Notepad/i ]);
+         $aoNotepad = Win32::ActAcc::waitForEvent(
+            +{ 'event'=>EVENT_OBJECT_SHOW(),
+               'name'=>qr/Notepad/,
+               'role'=>ROLE_SYSTEM_WINDOW()});
+         $aoNotepad->menuPick(+["File", "Exit"]);
+
+    *   Tools and samples
+
+        *   aaDigger.pl shows how to traverse the tree of accessible objects.
+
+        *   aaEvents.pl shows you the WinEvents that reflect what you're doing
+            with the GUI.
+
+        *   aaWhereAmI.pl shows how to link a pixel location with its
+            accessible object.
+
+        *   elizaNotepad.pl, just for fun, uses Notepad as the user interface
+            to Chatbot::Eliza.
+
+        See under the section on "Tools" for more about aaDigger, aaEvents,
+        and aaWhereAmI.
 
     You'll want to additionally use Win32::GuiTest, and other Win32 modules,
     if you want your script to click, type, manipulate the clipboard, etc.
 
-     use Win32::OLE;
-     use Win32::ActAcc;
-     Win32::OLE->Initialize(); 
-
-     # Start navigating window tree at its root -- the Desktop.
-     $accObj = Desktop();
-     @childAccObjs = $accObj->AccessibleChildren();
-
-     $name = $accObj->get_accName();
-     $rolename = Win32::ActAcc::GetRoleText($accObj->get_accRole());
-
-    For full documentation, refer to ActAcc.html inside the zip.
+    For full documentation, refer to ActAcc.html inside the zip. You will also
+    find many useful samples in the '.t' (test-case) files.
 
 INSTALLATION
+    You can install Win32::ActAcc by compiling it from source code, or, if you
+    have ActivePerl, you can install it using PPM, in which case you don't
+    need a C++ compiler.
+
   Installation from source code
 
      perl makefile.pl
@@ -36,6 +114,10 @@ INSTALLATION
     Yes, you have to install it before you test it. Otherwise it can't find
     its DLL. Probably someone will figure out how to fix this.
 
+    The test is tenuous. It will probably work only with Windows 2000, since
+    the design and operation of Notepad changes subtly from version to
+    version. You must have Win32::GuiTest 0.6 or later.
+
     Prerequisites:
 
     *   You may need Visual C++ 6.0 SP 4. The C/C++ part of Win32::ActAcc
@@ -44,8 +126,8 @@ INSTALLATION
     *   You need the July 2000 "Platform SDK". Earlier versions of the Active
         Accessibility SDK could give problems compiling.
 
-    *   The test suite requires Notepad.exe on the path. Also, it requires
-        Win32::GuiTest.
+    *   The test suite requires Notepad.exe and Explorer.exe on the path.
+        Also, it requires Win32::GuiTest.
 
     *   The Eliza-AOLInstantMessenger sample requires up-to-date HTML parsing
         modules. It will tell you if yours are missing or out-of-date.
@@ -79,10 +161,13 @@ INSTALLATION
     *   In site\lib\Win32: aaDigger.pl, aaEvents.pl, aaWhereAmI.pl, ActAcc.pm,
         ActAcc.pod
 
+        In site\lib\Win32\ActAcc: aaExplorer.pm
+
     *   In site\lib\auto\Win32\ActAcc: ActAcc.dll, ActAccEM.dll
 
 COPYRIGHT
-    Copyright 2001, Phill Wolf.
+    Copyright 2001, Phill Wolf. All rights reserved, including, without
+    limitation, motion-picture rights.
 
     You may use Win32::ActAcc under the terms of the Artistic License, as
     specified in the README file of the Perl distribution.
