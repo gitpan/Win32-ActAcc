@@ -677,8 +677,7 @@ ActivePerl users can install Win32::ActAcc using PPM.
 
 Copyright 2000, Phill Wolf. 
 
-You may distribute under the terms of either the GNU General Public
-License or the Artistic License, as specified in the README file
+You may distribute under the terms of the Artistic License, as specified in the README file
 of the Perl distribution.
 
 =head1 AUTHOR
