@@ -1,0 +1,707 @@
+# Copyright 2000, Phill Wolf.  See README.
+
+# Win32::ActAcc (Active Accessibility) demo: Display WinEvents
+
+=head1 NAME
+
+Win32::ActAcc - an Active Accessibility client for Perl
+
+=head1 SYNOPSIS
+
+ use Win32::OLE;
+ use Win32::GuiTest;
+ use Win32::ActAcc;
+ Win32::OLE->Initialize();  # Active Accessibility is based on COM
+
+ my $hwnd_desktop = Win32::GuiTest::GetDesktopWindow();
+ my $ao = AccessibleObjectFromWindow($hwnd_desktop);
+
+ @ch = $ao->AccessibleChildren(); # returns list of accessible objects
+
+ $name = $ao->get_accName();
+ $rolename = Win32::ActAcc::GetRoleText($ao->get_accRole());
+
+=head1 DESCRIPTION
+
+Win32::ActAcc gives Perl scripts free 
+run of the Active Accessibility client API, the IAccessible interface, 
+and Active Accessibility "WinEvents".
+
+Win32::ActAcc is object-oriented.  Functions like AccessibleObjectFromWindow 
+return "Win32::ActAcc::AO" objects:  AO for Accessible Object.  
+AO's have the methods defined in IAccessible, plus a few others for convenience in Perl.  
+(Note: The fundamental "object" unit for C-language Active Accessibility clients is a tuple of 
+(IAccessible*, child ID).  An AO wraps that tuple.)
+
+This file documents only what's specific to using Active Accessibility in Perl with this module.  
+For any serious use of this module, you'll want to read the official
+Active Accessibility documentation.  See L<"SEE ALSO">. 
+
+Win32::ActAcc has 4 parts.
+
+=over 4
+
+=item *
+
+Active Accessibility client API
+
+=item *
+
+IAccessible interface (implemented by the various GUI elements)
+
+=item *
+
+WinEvents 
+
+=item *
+
+Tools 
+
+=back 4
+
+This manual makes the following notational innovations:
+
+=over 4
+
+=item 1
+
+Methods and functions from the Active Accessibility SDK are marked with [*].
+
+=item 2
+
+Active Accessibility has some minor imperfections.  Of course, Win32::ActAcc also has imperfections.
+To aid the reader in distinguishing the two, we have taken the liberty of calling out
+some "Active Accessibility weirdnesses" as such.
+
+=back 4
+
+=head2 Active Accessibility client API
+
+The client API consists of jumping-off points like AccessibleObjectFromWindow,
+and miscellany like GetRoleText.  First-timers should read AccessibleObjectFromWindow 
+and then skip to L<"Win32::ActAcc::AO">.
+
+=head3 AccessibleObjectFromWindow [*]
+
+Obtain an "accessible object" representing a window, so you can call the object's 
+Active Accessibility methods:
+
+ $ao = AccessibleObjectFromWindow($hwnd);
+ die unless 'Win32::ActAcc::AO' eq ref($ao);
+
+A natural way to traverse the hierarchy of Accessible Objects is to begin with the
+"desktop window":
+
+ my $hwnd_desktop = Win32::GuiTest::GetDesktopWindow();
+ my $ao_desktop = AccessibleObjectFromWindow($hwnd_desktop);
+
+Once you've got an accessible object, see L<"Win32::ActAcc::AO"> on how to use it.
+
+AccessibleObjectFromWindow's optional second parameter defaults to OBJID_WINDOW.  
+Win32::ActAcc defines all the OBJID constants for Perl.  (They come from WinAble.h.)
+
+=head3 AccessibleObjectFromPoint [*]
+
+ my $ao = AccessibleObjectFromPoint($x, $y);
+
+Not all "accessible" windows are in the Desktop-rooted hierarchy.  If you know
+a pixel location where a window is visible, you can get an accessible object
+for the window from AccessibleObjectFromPoint.
+
+=head3 WindowFromAccessibleObject [*]
+
+Reverses AccessibleObjectFromWindow:  
+
+ $hwnd = $ao->WindowFromAccessibleObject(); 
+
+If no HWND corresponds to the object, WindowFromAccessibleObject dies, so you might
+want to run it inside an eval().
+
+=head3 click
+
+ Win32::ActAcc::click($xpix, $ypix, \$eh);
+
+click() uses Win32::GuiTest to "click" somewhere on the screen, but first, it
+activates the optional event monitor, so you can capture the consequences
+of the click.  See L<"activate"> and L<"menuPick">.
+
+=head3 GetRoleText [*]
+
+Returns localized name of a role-number.
+
+ my $chRole = Win32::ActAcc::GetRoleText($ao->get_accRole());
+
+=head3 GetStateText [*]
+
+Returns localized name of a state-number.  
+
+ my $statebit = Win32::ActAcc::STATE_SYSTEM_FOCUSED();
+ my $statename = Win32::ActAcc::GetStateText($statebit);
+
+Active Accessibility weirdness note:  States are combinations
+of state-bits such as STATE_SYSTEM_FOCUSED.  GetStateText returns the name of 
+only one of the bits that are set in the argument.
+If you want a quick way to get the whole truth, call L<"GetStateTextComposite"> instead.
+
+=head3 GetStateTextComposite
+
+Returns a localized string of state texts, representing all of the turned-on state
+bits in the argument.
+
+ $stateDesc = Win32::ActAcc::GetStateTextComposite( $ao->get_accState() );
+
+=head3 StateConstantName
+
+Returns the C constant name for a state-bit defined in OleAcc.h.
+
+=head3 ObjectIdConstantName
+
+Returns the C constant name for an object ID defined in OleAcc.h.
+
+=head3 nav
+
+nav finds a child Accessible Object by following a path from a starting point.
+The path specifies the name and/or role of each object along the path.
+
+You can use nav to find the Start button.  Giving undef as the starting point makes
+nav begin with the Desktop.
+
+ $btnStart = Win32::ActAcc::nav(undef, [ "{window}", "{window}Start", "{push button}Start" ] );
+
+nav is also useful finding a control on a dialog:
+
+ $aoOk = Win32::ActAcc::nav($aoDlg, [ "OK" ]);
+
+=head3 menuPick
+
+menuPick traverses a menu (starting with a menu bar), making a list of choices.
+Each choice is a regexp that must match one menu item.
+Right before making the final choice, menuPick activates your event monitor,
+so you can catch the consequences of the menu choice.
+
+ my $menubar = ...
+ my $ehDlg = Win32::ActAcc::createEventMonitor(0);
+ menuPick($menubar, +[ qr/Format/, qr/Font/ ], \$ehDlg);
+ $ehDlg->waitForEvent(
+   +{ 'event'=>Win32::ActAcc::EVENT_SYSTEM_DIALOGSTART() });
+
+(Note:  menuPick is still experimental.  It works with Notepad.)
+
+=head3 CHILDID_SELF and lots of other constants
+
+Use Win32::ActAcc constants as though they were functions:
+
+ die unless (0 == Win32::ActAcc::CHILDID_SELF());
+
+Win32::ActAcc provides the following families of Active Accessibility constants:
+
+=over 4
+
+=item *
+
+CHILDID_SELF
+
+=item *
+
+OBJID_  (e.g., OBJID_WINDOW)
+
+=item *
+
+CCHILDREN_FRAME
+
+=item *
+
+STATE_SYSTEM_  (e.g., STATE_SYSTEM_NORMAL)
+
+=item *
+
+ROLE_SYSTEM_  (e.g., ROLE_SYSTEM_SCROLLBAR)
+
+=item *
+
+SELFLAG_  (e.g., SELFLAG_TAKEFOCUS)
+
+=item *
+
+NAVDIR_  (e.g., NAVDIR_NEXT)
+
+=back
+
+=head2 Win32::ActAcc::AO
+
+IAccessible methods are in the Win32::ActAcc::AO package, so you can use them the
+object-oriented way.
+
+Active Accessibility weirdness note:  AO's that map to HWNDs can be compared by
+getting their HWNDs and comparing those.  You generally can't compare two AO objects directly.  
+The norm for Active Accessibility servers, including
+the default server built into Windows to represent standard controls, seems to be to
+return a new object in response to any query.  However, ActAcc always uses the same
+Perl object for any given IAccessible-and-childID pair, so if you have a stable
+server you can take advantage in Perl.  
+
+=head3 Release
+
+ $ao->Release();
+
+Accessible objects are COM objects, so each one must
+be Released when you're done with it.  
+Perl's garbage collector and Win32::ActAcc::AO 
+conspire to automatically Release the accessible objects, so you should not 
+need to call Release in your scripts.
+
+=head3 describe
+
+Produces human-readible (appropriate for debugging) description of an AO.  
+describe isn't supposed to die.  If something goes wrong, it returns an 
+incomplete or empty string.
+
+ print $ao->describe();
+
+The description is somewhat cryptic. For an equally-cryptic explanation,
+try this:
+
+ print Win32::ActAcc::AO::describe_meta();
+
+=head3 get_accName [*]
+
+ $name = $ao->get_accName();
+
+Returns undef if the object doesn't have this property.
+
+=head3 get_accRole [*]
+
+ $role = $ao->get_accRole();
+
+Returns a number, probably one of the Active Accessibility ROLE_ constants
+(ROLE_SYSTEM_MENUBAR, etc.).  You can convert the number
+to a string with Win32::ActAcc::GetRoleText.
+Returns undef if the object doesn't have this property.
+
+=head3 AccessibleChildren [*]
+
+ @ch = $ao->AccessibleChildren();
+
+Returns a list of the accessible objects that are children
+of $ao.  By default it omits the invisible children:
+
+ @ch = $ao->AccessibleChildren(Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 0);
+
+The first parameter is a bit mask; the second parameter is the bit values
+to find in each of the '1' positions in the mask.  
+
+To find only the invisible
+children, you can use:
+
+ @ch = $ao->AccessibleChildren(
+    Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 
+	Win32::ActAcc::STATE_SYSTEM_INVISIBLE());
+
+which means that the INVISIBLE bit should be included in the comparison, and it must be 1.
+
+Active Accessibility weirdness note:  You will probably want to use AccessibleChildren() instead of 
+get_accChildCount() and get_accChild().  AccessibleChildren probably calls those
+and then improves the results.  But, AccessibleChildren frequently returns fewer
+children than get_accChildCount says it should.
+
+Active Accessibility weirdness note:  Some objects report 1 child with AccessibleChildren, yet 
+accNavigate reveals more children.  You can work around this problem by calling
+L<"NavigableChildren"> instead.  Note that NavigableChildren may have its own drawbacks.
+
+In the Active Accessibility SDK, AccessibleChildren() is part of
+the API, not part of IAccessible.
+
+=head3 NavigableChildren
+
+Similar to AccessibleChildren, but uses accNavigate instead.  
+Rule of thumb:  Use AccessibleChildren unless it obviously is missing
+the children; in that case try NavigableChildren.
+
+ my @ch = $menu->NavigableChildren();
+
+=head3 get_accParent [*]
+
+ $p = $ao->get_accParent();
+
+Returns the parent object.  Returns undef if the object has no parent.
+
+=head3 get_accState [*]
+
+ $state = $ao->get_accState();
+
+Returns a number composed of bits defined by the Active Accessibility STATE_ constants
+(STATE_SYSTEM_NORMAL, etc.).  See L<"GetStateText"> and <"GetStateTextComposite">.
+
+Returns undef if the object doesn't have this property.
+
+=head3 get_accValue [*]
+
+ $value = $ao->get_accValue();
+
+Returns undef if the object doesn't have this property.
+
+=head3 accLocation [*]
+
+ my ($left, $top, $width, $height) = $ao->accLocation();
+
+Returns the accessible object's location on the screen, in pixels.  (0,0) is
+at the top left.  Dies if the object doesn't have this property.
+
+=head3 accNavigate [*]
+
+ my $smch = $ao->accNavigate(Win32::ActAcc::NAVDIR_FIRSTCHILD());
+ while (defined($smch))
+ {
+ 	my $n = $smch->get_accName();
+ 	print STDERR "$n\n";
+ 	$smch = $smch->accNavigate(Win32::ActAcc::NAVDIR_NEXT());
+ }
+
+Returns an Accessible Object representing one of the base object's relations.  
+Win32::ActAcc defines the family of NAVDIR constants from OleAcc.h.
+
+=head3 get_accDescription [*]
+
+ $desc = $ao->get_accDescription();
+
+Returns undef if the object doesn't have this property.
+If you're trying to debug your script, L<"describe"> is probably more appropriate.  
+
+=head3 get_accHelp [*]
+
+ $help = $ao->get_accHelp();
+
+Returns undef if the object doesn't have this property.
+
+=head3 get_accDefaultAction [*]
+
+ $da = $ao->get_accDefaultAction();
+
+Returns undef if the object doesn't have this property.
+
+=head3 get_accKeyboardShortcut [*]
+
+ $ks = $ao->get_accKeyboardShortcut();
+
+Returns undef if the object doesn't have this property.
+
+=head3 get_accChildCount [*]
+
+ $nch = $ao->get_accChildCount();
+
+See L<"AccessibleChildren">.
+
+=head3 get_accChild [*]
+
+ $ch = $ao->get_accChild(3);
+
+See L<"AccessibleChildren">.
+
+=head3 get_accFocus [*]
+
+ $f = $ao->get_accFocus();
+
+=head3 accDoDefaultAction [*]
+
+ $ao->accDoDefaultAction();
+
+Active Accessibility weirdness note:  Sometimes doesn't do anything.
+
+=head3 get_itemID
+
+ $plusOrDot = (Win32::ActAcc::CHILDID_SELF() == $ch[$i]->get_itemID()) ? '+' : '.';
+
+get_itemID() returns the item-ID that is part of the identity of the 
+accessible object.
+
+=head3 accSelect [*]
+
+ $ao->accSelect(Win32::ActAcc::SELFLAG_TAKEFOCUS());
+
+=head3 click
+
+ $ao->click(\$eh);
+
+click() uses Win32::GuiTest to "click" the center of the accessible object, but first, it
+activates the optional event monitor, so you can capture the consequences
+of the click.  See L<"activate"> and L<"menuPick">.
+
+=head3 findDescendant
+
+Applies a code-ref to each child, grand-child, etc.  In scalar context, returns the first
+Accessible Object for which the code-ref returns a true value.  In array context, returns 
+a list of all Accessible Objects for which the code-ref returns a true value.
+
+ $btnClose = $wNotepadApp->findDescendant( 
+	sub{	
+		my $n = $_->get_accName(); 
+		(defined($n) && $n eq "Close") && 
+			($_->get_accRole() == Win32::ActAcc::ROLE_SYSTEM_PUSHBUTTON()) 
+	});
+
+=head2 WinEvents
+
+WinEvents allow a script to react to the consequences of an action.  For example, the
+script can press Start and then latch onto the menu that comes up.  
+(WinEvents may, alas, be the only way to find that menu using Active Accessibility.)
+
+=head3 createEventMonitor
+
+ my $ehDlg = createEventMonitor(1);
+
+createEventMonitor creates a Win32::ActAcc::EventMonitor object,
+which the script can poll for WinEvents.
+
+The "1" means the EventMonitor is immediately activated.  Otherwise
+the EventMonitor is latent until activated, which typically happens in
+one of two ways:
+
+=over 4
+
+=item *
+
+you call L<"activate">.
+
+=item *
+
+you call a method (like click or L<"menuPick">) that activates the monitor so you
+can capture the results of the click.
+
+=back 4
+
+Each Perl process with an active EventMonitor installs an Active Accessibility
+"in-proc" event hook that probably degrades system performance:  you will want to 
+tightly bracket the scope of your EventMonitor objects, 
+or deactivate them with $eh->activate(0) as soon as they are no longer interesting.
+
+The event hook receives WinEvents and records them in a fixed-size circular buffer.  
+There's no overrun indicator, so try to keep your EventMonitors reasonably up-to-date.
+
+If createEventMonitor dies, maybe ActAcc can't find F<ActAccEM.dll> (the event-hook DLL). 
+See L<"INSTALLATION">.
+
+=head3 EventMonitor
+
+=head4 getEventCount
+
+ my $ec = $eh->getEventCount();
+
+Returns a cumulative total number of events caught by the 
+event hook installed by Win32::ActAcc.
+
+=head4 getEvent
+
+Returns an event caught by the event monitor (undef if no event is ready). 
+You will probably want to call getEvent in a loop until you get
+the event you're waiting for.  You probably don't want a very tight loop,
+or your computer won't get anything done while you're waiting:
+
+ while (1)
+ {
+ 	print "-----\n";
+ 	while (1) 
+ 	{
+ 		my $e = $eh->getEvent();
+ 		last unless defined($e);
+ 		print $e->evDescribe() . "\n";
+ 	}
+ 	sleep(1);
+ } 
+
+The event is a blessed hash (L<"Win32::ActAcc::Event">).
+
+=head4 waitForEvent
+
+waitForEvent is an event-polling loop you can use instead of 
+coding the above loop every time.  It keeps polling until it gets an event
+that matches your criteria, or the timeout period expires.
+
+waitForEvent returns the accessible object for the event that matched the criteria, 
+or undef if the timeout expired.
+
+You give waitForEvent a hash-ref with 'event' and optional
+'name' and 'role' keys.  'name' and 'role' test the 
+accessible object the event references.
+
+ $rvNotepad = $eh->waitForEvent(
+  +{ 'event'=>Win32::ActAcc::EVENT_OBJECT_SHOW(),
+     'name'=>qr/Notepad/,
+     'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW() });
+
+Or, you can give waitForEvent a code-reference instead of the hash.  The code
+is given the event, and returns a true value to end the waitForEvent loop.
+
+ $self->waitForEvent(
+   sub
+   {
+    print $_->evDescribe() . "\n"; 
+    undef
+   }, 60);
+
+=head4 clear
+
+ $eh->clear();
+
+Erases the backlog of events on the event monitor.
+
+=head4 synch
+
+ $eh1->synch($eh2);
+
+"Synchronizes" $eh1 with $eh2 by setting $eh1's event-buffer cursor to $eh2's, 
+so that $eh1->getEvent() will
+return the same event as $eh2->getEvent().  synch() can move the monitor forward or backward;
+in other words, it can both advance and rewind.  (But, when rewinding, watch out for 
+buffer overrun. The spot you rewind to, may have been re-used since the time the event
+was written that you think you are rewinding to.)
+
+=head4 isActive
+
+ $a = $eh->isActive();
+
+Returns a true value if the event monitor is active, a false
+value if it is latent.
+
+=head4 activate
+
+ $eh->activate(1); # activate
+ $eh->activate(0); # deactivate
+
+Activating a monitor makes it "catch up" with all events received so far,
+and makes it sensitive to future events.  Activating an already-active
+monitor has no effect on it.
+
+Deactivating a monitor makes it useless, until it is reactivated.
+
+=head4 debug_spin
+
+This debug function displays the EventMonitor's events for a certain number of seconds.
+
+ $eh->debug_spin(60);
+
+=head3 Win32::ActAcc::Event
+
+An event is an object of type Win32::ActAcc::Event.  It's a hash with fields
+as described in the API documentation:
+
+ event
+ hwnd
+ idObject
+ idChild
+ dwmsEventTime
+
+ $e = $eh->getEvent();
+ print $$e{'event'} . "\n";
+
+=head4 getAO
+
+ $ao = $e->getAO();
+
+Returns the accessible object that the event pertains to.
+
+=head4 evDescribe
+
+ print $e->evDescribe() . "\n";
+
+Good for debugging - returns some information about the event.
+
+=head3 EventConstantName
+
+Returns the C constant name for a WinEvent number defined in WinAble.h.
+
+=head3 AccessibleObjectFromEvent [*]
+
+Obtain an "accessible object" from information in a WinEvent.  
+(You may prefer to use the object-oriented $e->L<"getAO">() way instead.)
+
+ my $ao = AccessibleObjectFromEvent($$e{'hwnd'}, $$e{'idObject'}, $$e{'idChild'});
+
+=head2 Tools
+
+=head3 aaDigger.pl
+
+aaDigger lets you navigate the hierarchy of accessible objects, rooted at the Desktop window.  
+When you're planning an Active Accessibility script, aaDigger helps you get your feet
+on the ground.
+
+=head3 aaEvents.pl
+
+aaEvents makes a continuous display of your system's WinEvents.  
+When you're planning an Active Accessibility script, aaEvents helps you
+see what events your script should be waiting for.
+
+=head3 aaWhereAmI.pl
+
+aaWhereAmI continuously describes the accessible object under the cursor at any
+given moment.  
+
+=head1 BUGS, LIMITATIONS, AND SHORTCOMINGS
+
+You can't use an "accessible object" with Win32::OLE.  Especially with Microsoft
+Office, it would be nice to get a "native object model" IDispatch* from AccessibleObjectFromWindow,
+and hand it off to Win32::OLE to make Office-specific OLE Automation method calls.
+
+There's no overrun indicator on an EventMonitor.
+
+Win32::ActAcc probably doesn't work multi-threaded.
+
+F<ActAccEM.dll> goes in a weird place in the Perl tree (not under site/).
+
+nav() and findDescendant() should accept the same path arguments.  
+And the path notation should provide a dizzying combination of XPath and
+regular-expression features.  (For XPath, see http://www.w3.org/TR/xpathZ<>.)
+
+=head1 INSTALLATION
+
+ perl makefile.pl
+ nmake install
+ nmake test
+
+Yes, 'install' before 'test'; otherwise the event-hook DLL won't be found.  Surely
+there is a way to fix this.
+
+You need the July 2000 "Platform SDK".  
+Earlier versions of the Active Accessibility SDK could give problems compiling.
+I compiled ActAcc using Visual C++ 6.0 SP 4.
+
+The test suite requires Notepad.exe on the path.
+
+In addition to the usual files for Perl extensions,
+the Makefile builds F<ActAccEM.DLL> to capture WinEvents.
+It puts this DLL in a certain location in the Perl
+installation tree, which you can learn as follows:
+
+ perl -e "use Config; print $Config{'scriptdirexp'}"
+
+Unfortunately, it is not under the 'site' branch of the tree.  
+Someone with a deep and nuanced understanding of MakeMaker might help us here.
+To be proper, perhaps 'nmake' should put F<ActAccEM.DLL> in the 'blib' tree, 
+and perhaps 'nmake install' should put it in the 'site' tree.  
+
+=head1 COPYRIGHT
+
+Copyright 2000, Phill Wolf. 
+
+You may distribute under the terms of either the GNU General Public
+License or the Artistic License, as specified in the README file
+of the Perl distribution.
+
+=head1 AUTHOR
+
+Phill Wolf, pbwolf@cpan.org
+
+=head1 SEE ALSO
+
+Active Accessibility documentation.  As of this writing, it is available on 
+http://msdn.microsoft.com on the "Libraries" page:
+
+ Platform SDK
+  User Interface Services
+   Accessibility
+    Microsoft Active Accessibility
+
+Win32::OLE
+
+Win32::GuiTest
+
+=cut

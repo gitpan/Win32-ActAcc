@@ -1,0 +1,52 @@
+NAME
+    Win32::ActAcc - an Active Accessibility client for Perl
+
+SYNOPSIS
+     use Win32::OLE;
+     use Win32::GuiTest;
+     use Win32::ActAcc;
+     Win32::OLE->Initialize();  # Active Accessibility is based on COM
+
+     my $hwnd_desktop = Win32::GuiTest::GetDesktopWindow();
+     my $ao = AccessibleObjectFromWindow($hwnd_desktop);
+
+     @ch = $ao->AccessibleChildren(); # returns list of accessible objects
+
+     $name = $ao->get_accName();
+     $rolename = Win32::ActAcc::GetRoleText($ao->get_accRole());
+
+INSTALLATION
+     perl makefile.pl
+     nmake install
+     nmake test
+
+    Yes, 'install' before 'test'; otherwise the event-hook DLL won't be found.
+    Surely there is a way to fix this.
+
+    You need the July 2000 "Platform SDK". Earlier versions of the Active
+    Accessibility SDK could give problems compiling. I compiled ActAcc using
+    Visual C++ 6.0 SP 4.
+
+    The test suite requires Notepad.exe on the path.
+
+    In addition to the usual files for Perl extensions, the Makefile builds
+    ActAccEM.DLL to capture WinEvents. It puts this DLL in a certain location
+    in the Perl installation tree, which you can learn as follows:
+
+     perl -e "use Config; print $Config{'scriptdirexp'}"
+
+    Unfortunately, it is not under the 'site' branch of the tree. Someone with
+    a deep and nuanced understanding of MakeMaker might help us here. To be
+    proper, perhaps 'nmake' should put ActAccEM.DLL in the 'blib' tree, and
+    perhaps 'nmake install' should put it in the 'site' tree.
+
+COPYRIGHT
+    Copyright 2000, Phill Wolf.
+
+    You may distribute under the terms of either the GNU General Public
+    License or the Artistic License, as specified in the README file of the
+    Perl distribution.
+
+AUTHOR
+    Phill Wolf, pbwolf@cpan.org
+

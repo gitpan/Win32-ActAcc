@@ -1,0 +1,20 @@
+AAEvtMon.h			Interface to ActAccEM.dll
+AO.xsh				ActAcc.xs includes this; covers Win32::ActAcc::AO
+ActAcc.html
+ActAcc.pm			Module
+ActAcc.pod			Docs
+ActAcc.xs			Extension core
+ActAcc.xsh			ActAcc.xs includes this; covers Win32::ActAcc
+ActAccEM.x			C code for ActAccEM.dll; called 'x' to escape MakeMaker's attention
+EM.xsh				ActAcc.xs includes this; covers Win32::EventListener
+Changes
+IAccessible.h			From the July 2000 Platform SDK files, in case yours are earlier
+MANIFEST			List of files
+Makefile.PL
+README
+aaEvents.pl			Demo WinEvents
+aaWhereAmI.pl			Demo mouse pointer events
+aadigger.pl			Demo accessible-object hierarchy
+t/1_sanity.t
+t/2_english.t
+typemap
