@@ -1,4 +1,4 @@
-# Copyright 2001, Phill Wolf.  See README.
+# Copyright 2001-2004, Phill Wolf.  See README.
 
 # Win32::ActAcc (Active Accessibility) tool: display what's under the mouse
 
@@ -8,7 +8,7 @@ use strict;
 
 package Win32::ActAcc::MouseTracker;
 
-use Win32::ActAcc;
+use Win32::ActAcc qw(:EVENTs :ROLEs);
 use Data::Dumper;
 
 require Exporter;
@@ -18,44 +18,26 @@ use vars qw(@ISA @EXPORT);
 
 sub aaTrackMouse
 {
-    my $IDLE_SECS_TO_QUIT = 4;
+    my $RUN_TIME_SECONDS = shift;
     my $eh = Win32::ActAcc::createEventMonitor(1);
-    $eh->clear();
-    my $idle = 0;
     my $oldMloc;
-    my $ao;
-    while ($idle < $IDLE_SECS_TO_QUIT)
-    {
-	my $iterWasIdle = 1;
-	if ($idle != 0) {print "----- Hold still and I will exit in ". ($IDLE_SECS_TO_QUIT-$idle). " second(s)\n";}
-	while (1) 
-	{
-	    my $e = $eh->getEvent();
-	    last unless defined($e);
-	    if (Win32::ActAcc::EVENT_OBJECT_LOCATIONCHANGE() == $$e{'event'})
-	    {
-		if (Win32::ActAcc::OBJID_CURSOR() == $$e{'idObject'})
-		{
-		    my $mloc = describeMouseLocation($e, \$ao);
-		    if ($mloc ne $oldMloc)
-		    {
-			print $mloc;
-			$oldMloc = $mloc;
-		    }
-		    $iterWasIdle = 0;
-		}
-	    }
-	}
-	if ($iterWasIdle)
-	{
-	    $idle++;
-	}
-	else
-	{
-	    $idle = 0;
-	}
-	sleep(1);
-    }
+    my $ao = undef;
+    $eh->eventLoop(
+		+[+{
+			'event'=>EVENT_OBJECT_LOCATIONCHANGE(),
+			'role'=>ROLE_SYSTEM_CURSOR(),
+			'code'=>sub{
+						my $e = shift;
+						$ao = $e->getAO();
+						my $mloc = describeMouseLocation($e, \$ao);
+						if ($mloc ne $oldMloc)
+						{
+							print "\r$mloc";
+							$oldMloc = $mloc;
+						}
+						undef; # so eventLoop continues
+					}
+		}], $RUN_TIME_SECONDS);
     return $ao;
 }
 
@@ -78,7 +60,7 @@ sub describeAncestors
 {
     my $ao = shift;
     my $i = 0;
-    return join("\n", map(('  ' x $i++) . $_->describe(), getAncestry($ao)))."\n";
+    return join("\n", map(('  ' x $i++) . $_->describe(1), getAncestry($ao)))."\n";
 }
 
 sub describeMouseLocation

@@ -1,4 +1,4 @@
-# Copyright 2000, Phill Wolf.  See README.
+# Copyright 2000-2004, Phill Wolf.  See README.
 
 # Win32::ActAcc (Active Accessibility) demo: Track mouse
 
@@ -10,9 +10,16 @@ use Win32::ActAcc::MouseTracker;
 
 sub main
 {
-    print "\n"."aaWhereAmI - Track mouse - hold mouse still for a while to stop the program"."\n\n";
+    my $RUN_TIME_SECONDS = 15;
+
+    print "\n"."aaWhereAmI - Track mouse - \n";
+    print "Move mouse and watch the running display of the\n";
+    print "accessible object under the mouse.\n\n";
+    print "For help on the output notation, run aaDigger and use the 'help' and 'abbr' commands.\n\n";
+
+    print "Program will end after $RUN_TIME_SECONDS seconds.\n\n";
     Win32::OLE->Initialize();
-    aaTrackMouse();
+    aaTrackMouse($RUN_TIME_SECONDS);
     print "Thank you\n";
 }
 

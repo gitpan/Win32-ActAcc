@@ -1,17 +1,33 @@
-# Copyright 2001, Phill Wolf.  See README.
+# Copyright 2001, 2004, Phill Wolf.  See README.
 
 # Win32::ActAcc (Active Accessibility)
 
+# This script runs Notepad (which must be on the Path) and immediately
+# closes it with File|Exit.
+
 use Win32::OLE;
 use Win32::ActAcc;
-use Win32::ActAcc::Shell2000;
 
 Win32::OLE->Initialize();
-$menu = Win32::ActAcc::Shell2000::StartButtonMenu();
-Win32::ActAcc::clearEvents();
-$menu->menuPick([ qr/^Programs/, qr/Accessories/i, qr/Notepad/i ]);
-$aoNotepad = Win32::ActAcc::waitForEvent(
-    +{ 'event'=>EVENT_OBJECT_SHOW(),
-    'name'=>qr/Notepad/,
-    'role'=>ROLE_SYSTEM_WINDOW()});
+
+sub StartNotepad
+{
+    my $eh = Win32::ActAcc::createEventMonitor(1);
+    Win32::ActAcc::clearEvents();
+    sleep(3);
+    system("start notepad");
+    my $aoNotepad = Win32::ActAcc::waitForEvent(
+	+{ 
+      'event'=>Win32::ActAcc::EVENT_OBJECT_SHOW(),
+	  'name'=>qr/Notepad/,
+	  'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW()
+     },
+     +{
+      'trace'=>1
+     });
+    die unless defined($aoNotepad);
+    return $aoNotepad;
+}
+
+$aoNotepad = StartNotepad();
 $aoNotepad->menuPick(+["File", "Exit"]);

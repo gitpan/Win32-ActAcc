@@ -1,111 +1,76 @@
-# Copyright 2001, Phill Wolf.  See README.
+# Copyright 2001-2004, Phill Wolf.  See README.
 
 # Win32::ActAcc (Active Accessibility)
 
 package Win32::ActAcc;
 
-require 5.005_62;
+require 5.008_000;
 use strict;
 use warnings; 
 use Carp;
-use Config;
+use Text::Trie;
+#use Array::Unique;
+use Time::HiRes;
 
 use vars qw(
-	$VERSION
-	%EventName
-	$EventName_setup
-	%ObjectId
-	$ObjectId_setup
-	%StateName
-	$StateName_setup
-    @ISA $VERSION $AUTOLOAD
-	@EXPORT @EXPORT_OK
-	$EMDllFile
-        @rolesk %rolesn $rolesn_setup @eventsk @statesk @objidsk @selflagsk @navdirsk
+            $VERSION
+            %EventName
+            $EventName_setup
+            %ObjectId
+            $ObjectId_setup
+            %StateName
+            $StateName_setup
+            @ISA $VERSION $AUTOLOAD
+            @EXPORT @EXPORT_OK %EXPORT_TAGS
+            $EMDllFile
+            @rolesk %rolesn $rolesn_setup @eventsk @statesk @objidsk @selflagsk @navdirsk
+            $IMPLICIT_CLIENT
+            $MENU_SLOWNESS
+            $LOG_ACTIONS
 );
 
-$VERSION = '1.0';
+$VERSION = '1.1';
+$MENU_SLOWNESS = 1;
+$LOG_ACTIONS = 0;
 
 require Exporter;
 require DynaLoader;
 
 @ISA = qw(Exporter DynaLoader);
 
-@rolesk = qw(
-ROLE_SYSTEM_TITLEBAR ROLE_SYSTEM_MENUBAR ROLE_SYSTEM_SCROLLBAR ROLE_SYSTEM_GRIP ROLE_SYSTEM_SOUND ROLE_SYSTEM_CURSOR 
-ROLE_SYSTEM_CARET ROLE_SYSTEM_ALERT ROLE_SYSTEM_WINDOW ROLE_SYSTEM_CLIENT ROLE_SYSTEM_MENUPOPUP ROLE_SYSTEM_MENUITEM 
-ROLE_SYSTEM_TOOLTIP ROLE_SYSTEM_APPLICATION ROLE_SYSTEM_DOCUMENT ROLE_SYSTEM_PANE ROLE_SYSTEM_CHART ROLE_SYSTEM_DIALOG 
-ROLE_SYSTEM_BORDER ROLE_SYSTEM_GROUPING ROLE_SYSTEM_SEPARATOR ROLE_SYSTEM_TOOLBAR ROLE_SYSTEM_STATUSBAR 
-ROLE_SYSTEM_TABLE ROLE_SYSTEM_COLUMNHEADER ROLE_SYSTEM_ROWHEADER ROLE_SYSTEM_COLUMN ROLE_SYSTEM_ROW ROLE_SYSTEM_CELL 
-ROLE_SYSTEM_LINK ROLE_SYSTEM_HELPBALLOON ROLE_SYSTEM_CHARACTER ROLE_SYSTEM_LIST ROLE_SYSTEM_LISTITEM 
-ROLE_SYSTEM_OUTLINE ROLE_SYSTEM_OUTLINEITEM ROLE_SYSTEM_PAGETAB ROLE_SYSTEM_PROPERTYPAGE ROLE_SYSTEM_INDICATOR 
-ROLE_SYSTEM_GRAPHIC ROLE_SYSTEM_STATICTEXT ROLE_SYSTEM_TEXT ROLE_SYSTEM_PUSHBUTTON ROLE_SYSTEM_CHECKBUTTON 
-ROLE_SYSTEM_RADIOBUTTON ROLE_SYSTEM_COMBOBOX ROLE_SYSTEM_DROPLIST ROLE_SYSTEM_PROGRESSBAR ROLE_SYSTEM_DIAL 
-ROLE_SYSTEM_HOTKEYFIELD ROLE_SYSTEM_SLIDER ROLE_SYSTEM_SPINBUTTON ROLE_SYSTEM_DIAGRAM ROLE_SYSTEM_ANIMATION 
-ROLE_SYSTEM_EQUATION ROLE_SYSTEM_BUTTONDROPDOWN ROLE_SYSTEM_BUTTONMENU ROLE_SYSTEM_BUTTONDROPDOWNGRID 
-ROLE_SYSTEM_WHITESPACE ROLE_SYSTEM_PAGETABLIST ROLE_SYSTEM_CLOCK
-);
+require Win32::ActAcc::aaconstlists;
 
-@eventsk = qw(
-EVENT_SYSTEM_SOUND EVENT_SYSTEM_ALERT EVENT_SYSTEM_FOREGROUND EVENT_SYSTEM_MENUSTART EVENT_SYSTEM_MENUEND 
-EVENT_SYSTEM_MENUPOPUPSTART EVENT_SYSTEM_MENUPOPUPEND EVENT_SYSTEM_CAPTURESTART EVENT_SYSTEM_CAPTUREEND 
-EVENT_SYSTEM_MOVESIZESTART EVENT_SYSTEM_MOVESIZEEND EVENT_SYSTEM_CONTEXTHELPSTART EVENT_SYSTEM_CONTEXTHELPEND 
-EVENT_SYSTEM_DRAGDROPSTART EVENT_SYSTEM_DRAGDROPEND EVENT_SYSTEM_DIALOGSTART EVENT_SYSTEM_DIALOGEND 
-EVENT_SYSTEM_SCROLLINGSTART EVENT_SYSTEM_SCROLLINGEND EVENT_SYSTEM_SWITCHSTART EVENT_SYSTEM_SWITCHEND 
-EVENT_SYSTEM_MINIMIZESTART EVENT_SYSTEM_MINIMIZEEND EVENT_OBJECT_CREATE EVENT_OBJECT_DESTROY EVENT_OBJECT_SHOW 
-EVENT_OBJECT_HIDE EVENT_OBJECT_REORDER EVENT_OBJECT_FOCUS EVENT_OBJECT_SELECTION EVENT_OBJECT_SELECTIONADD 
-EVENT_OBJECT_SELECTIONREMOVE EVENT_OBJECT_SELECTIONWITHIN EVENT_OBJECT_STATECHANGE EVENT_OBJECT_LOCATIONCHANGE 
-EVENT_OBJECT_NAMECHANGE EVENT_OBJECT_DESCRIPTIONCHANGE EVENT_OBJECT_VALUECHANGE EVENT_OBJECT_PARENTCHANGE 
-EVENT_OBJECT_HELPCHANGE EVENT_OBJECT_DEFACTIONCHANGE EVENT_OBJECT_ACCELERATORCHANGE
-);
-
-@statesk = qw(
-STATE_SYSTEM_NORMAL STATE_SYSTEM_UNAVAILABLE STATE_SYSTEM_SELECTED STATE_SYSTEM_FOCUSED STATE_SYSTEM_PRESSED 
-STATE_SYSTEM_CHECKED STATE_SYSTEM_MIXED STATE_SYSTEM_INDETERMINATE STATE_SYSTEM_READONLY STATE_SYSTEM_HOTTRACKED 
-STATE_SYSTEM_DEFAULT STATE_SYSTEM_EXPANDED STATE_SYSTEM_COLLAPSED STATE_SYSTEM_BUSY STATE_SYSTEM_FLOATING 
-STATE_SYSTEM_MARQUEED STATE_SYSTEM_ANIMATED STATE_SYSTEM_INVISIBLE STATE_SYSTEM_OFFSCREEN STATE_SYSTEM_SIZEABLE 
-STATE_SYSTEM_MOVEABLE STATE_SYSTEM_SELFVOICING STATE_SYSTEM_FOCUSABLE STATE_SYSTEM_SELECTABLE STATE_SYSTEM_LINKED 
-STATE_SYSTEM_TRAVERSED STATE_SYSTEM_MULTISELECTABLE STATE_SYSTEM_EXTSELECTABLE STATE_SYSTEM_ALERT_LOW 
-STATE_SYSTEM_ALERT_MEDIUM STATE_SYSTEM_ALERT_HIGH STATE_SYSTEM_PROTECTED STATE_SYSTEM_VALID
-);
-
-@objidsk  = qw(
-CHILDID_SELF
-OBJID_WINDOW OBJID_SYSMENU OBJID_TITLEBAR OBJID_MENU OBJID_CLIENT OBJID_VSCROLL OBJID_HSCROLL OBJID_SIZEGRIP 
-OBJID_CARET OBJID_CURSOR OBJID_ALERT OBJID_SOUND
-);
-
-@selflagsk  = qw(
-SELFLAG_NONE SELFLAG_TAKEFOCUS SELFLAG_TAKESELECTION SELFLAG_EXTENDSELECTION SELFLAG_ADDSELECTION 
-SELFLAG_REMOVESELECTION SELFLAG_VALID
-);
-
-@navdirsk = qw(
-NAVDIR_MIN NAVDIR_UP NAVDIR_DOWN NAVDIR_LEFT NAVDIR_RIGHT NAVDIR_NEXT NAVDIR_PREVIOUS NAVDIR_FIRSTCHILD 
-NAVDIR_LASTCHILD NAVDIR_MAX
-);
-
-
-
-
-@EXPORT = (qw(EVENT_OBJECT_SHOW
-Desktop
+our @export_all = (qw(Desktop 
 AccessibleObjectFromEvent 
 AccessibleObjectFromWindow 
 AccessibleObjectFromPoint
 createEventMonitor
-),@rolesk,@eventsk,@statesk,@objidsk,@selflagsk,@navdirsk);
-
-@EXPORT_OK = qw(
 GetStateText 
 GetRoleText 
+GetStateTextComposite
+getEvent
+waitForEvent
+awaitCalm
 StateConstantName 
 ObjectIdConstantName 
 EventConstantName 
-nav
-GetStateTextComposite
-menuPick
-);
+clearEvents
+GetOleaccVersionInfo
+standardEventMonitor
+RoleFriendlyNameToNumber
+),@rolesk,@eventsk,@statesk,@objidsk,@selflagsk,@navdirsk);
+
+@EXPORT = ();
+@EXPORT_OK = @export_all;
+%EXPORT_TAGS = 
+  ('all'=>+[@export_all],
+   'ROLEs'=>+[@rolesk],
+   'EVENTs'=>+[@eventsk],
+   'STATEs'=>+[@statesk],
+   'OBJIDs'=>+[@objidsk],
+   'SELFLAGs'=>+[@selflagsk],
+   'NAVDIRs'=>+[@navdirsk],
+  );
 
 bootstrap Win32::ActAcc $VERSION;
 
@@ -121,7 +86,7 @@ sub AUTOLOAD {
     croak "'constant' not defined" if $constname eq 'constant';
     $! = undef;
     my $val = constant($constname, @_ ? $_[0] : 0);
-    if ($! != 0) {
+    if (($! != 0) || ($val == 0xdeadbeef)) {
       croak "Don't know what to do with $constname";
     }
     return $val;
@@ -143,346 +108,178 @@ sub IEH
 }
 
 ########
+# testable('standardEventMonitor')
+sub standardEventMonitor
+  {
+    IEH();
+  }
 
 sub createEventMonitor
 {
     my $active = shift;
     my $rv = events_register($active);
+    die("$^E") unless $rv;
     return $rv;
 }
 
+# testable('waitForEvent')
 sub waitForEvent
 {
     IEH()->waitForEvent(@_);
 }
 
+# testable('awaitCalm')
+sub awaitCalm
+  {
+    return IEH()->awaitCalm(@_);
+  }
+
+# testable('getEvent')
+sub getEvent
+  {
+    return IEH()->getEvent();
+  }
+
+# testable('clearEvents')
 sub clearEvents
 {
     IEH()->clear();
 }
 
+# testable('RoleFriendlyNameToNumber.literal_number')
+# testable('RoleFriendlyNameToNumber.role_text')
+# testable('RoleFriendlyNameToNumber.constant_name_full')
+# testable('RoleFriendlyNameToNumber.constant_name_suffix')
+# testable('RoleFriendlyNameToNumber.package_name_full')
+# testable('RoleFriendlyNameToNumber.package_name_suffix')
+
+# in: "friendly name" of a role 
+#  (number, role text, constant name, package name)
+# out: numeric value of role
+# error: undef if "friendly name" doesn't ring a bell
 sub RoleFriendlyNameToNumber
-{
+  {
     my $rolefriendlyname = shift;
     if (!$rolesn_setup)
-    {
+      {
+        # Cache a hash of all possible results.
         $rolesn_setup = 1;
+        # loop over ROLE... constant names
         for (@rolesk) 
-        {
+          {
+            # get numeric value
             my $n = eval("$_()");
-            $rolesn{GetRoleText($n)}=$n; # push button
-            $rolesn{$_}=$n; # ROLE_SYSTEM_PUSHBUTTON
-            /ROLE_SYSTEM_/;
-            $rolesn{$'}=$n; # PUSHBUTTON
+
+            # memoize by numeric value
+            $rolesn{$n} = $n;
+            # memoize result for query by "role text"
+            $rolesn{GetRoleText($n)}=$n;
+            # memoize result for query by constant-name
+            $rolesn{$_}=$n;
+            # memoize result by constant-name less standard prefix
+            /ROLE_SYSTEM_(.*)$/;
+            $rolesn{$1}=$n; 
+            # memoize by package name with Win32::ActAcc::
             my $p = GetRolePackage($n);
-            $rolesn{$p}=$n; # Win32::ActAcc::Pushbutton
-            $p =~ /Win32::ActAcc::/;
-            $rolesn{$'}=$n; # Pushbutton
+            $rolesn{$p}=$n;
+            # memoize by package name without Win32::ActAcc::
+            $p =~ /Win32::ActAcc::(.*)$/;
+            $rolesn{$1}=$n; 
         }
     }
     return $rolesn{$rolefriendlyname};
 }
 
-sub StateConstantName
+
+
+
+
+
+my $pStateAbbrev;
+
+sub DistinctAbbreviations
 {
-	if (!$StateName_setup)
-	{
-		$StateName_setup = 1;
-		$StateName{Win32::ActAcc::STATE_SYSTEM_NORMAL()} = 'STATE_SYSTEM_NORMAL';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_UNAVAILABLE()} = 'STATE_SYSTEM_UNAVAILABLE';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_SELECTED()} = 'STATE_SYSTEM_SELECTED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_FOCUSED()} = 'STATE_SYSTEM_FOCUSED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_PRESSED()} = 'STATE_SYSTEM_PRESSED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_CHECKED()} = 'STATE_SYSTEM_CHECKED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_MIXED()} = 'STATE_SYSTEM_MIXED';
-		eval { $StateName{Win32::ActAcc::STATE_SYSTEM_INDETERMINATE()} = 'STATE_SYSTEM_INDETERMINATE'; };
-		$StateName{Win32::ActAcc::STATE_SYSTEM_READONLY()} = 'STATE_SYSTEM_READONLY';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_HOTTRACKED()} = 'STATE_SYSTEM_HOTTRACKED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_DEFAULT()} = 'STATE_SYSTEM_DEFAULT';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_EXPANDED()} = 'STATE_SYSTEM_EXPANDED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_COLLAPSED()} = 'STATE_SYSTEM_COLLAPSED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_BUSY()} = 'STATE_SYSTEM_BUSY';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_FLOATING()} = 'STATE_SYSTEM_FLOATING';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_MARQUEED()} = 'STATE_SYSTEM_MARQUEED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_ANIMATED()} = 'STATE_SYSTEM_ANIMATED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_INVISIBLE()} = 'STATE_SYSTEM_INVISIBLE';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_OFFSCREEN()} = 'STATE_SYSTEM_OFFSCREEN';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_SIZEABLE()} = 'STATE_SYSTEM_SIZEABLE';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_MOVEABLE()} = 'STATE_SYSTEM_MOVEABLE';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_SELFVOICING()} = 'STATE_SYSTEM_SELFVOICING';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_FOCUSABLE()} = 'STATE_SYSTEM_FOCUSABLE';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_SELECTABLE()} = 'STATE_SYSTEM_SELECTABLE';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_LINKED()} = 'STATE_SYSTEM_LINKED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_TRAVERSED()} = 'STATE_SYSTEM_TRAVERSED';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_MULTISELECTABLE()} = 'STATE_SYSTEM_MULTISELECTABLE';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_EXTSELECTABLE()} = 'STATE_SYSTEM_EXTSELECTABLE';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_ALERT_LOW()} = 'STATE_SYSTEM_ALERT_LOW';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_ALERT_MEDIUM()} = 'STATE_SYSTEM_ALERT_MEDIUM';
-		$StateName{Win32::ActAcc::STATE_SYSTEM_ALERT_HIGH()} = 'STATE_SYSTEM_ALERT_HIGH';
-		eval { $StateName{Win32::ActAcc::STATE_SYSTEM_PROTECTED()} = 'STATE_SYSTEM_PROTECTED'; };
-	}
-	my $oik = shift;
-	return $StateName{$oik};
-}
-
-sub ObjectIdConstantName
-{
-	if (!$ObjectId_setup)
-	{
-		$ObjectId_setup = 1;
-		$ObjectId{Win32::ActAcc::CHILDID_SELF()} = 'CHILDID_SELF';
-		$ObjectId{Win32::ActAcc::OBJID_WINDOW()} = 'OBJID_WINDOW';
-		$ObjectId{Win32::ActAcc::OBJID_SYSMENU()} = 'OBJID_SYSMENU';
-		$ObjectId{Win32::ActAcc::OBJID_TITLEBAR()} = 'OBJID_TITLEBAR';
-		$ObjectId{Win32::ActAcc::OBJID_MENU()} = 'OBJID_MENU';
-		$ObjectId{Win32::ActAcc::OBJID_CLIENT()} = 'OBJID_CLIENT';
-		$ObjectId{Win32::ActAcc::OBJID_VSCROLL()} = 'OBJID_VSCROLL';
-		$ObjectId{Win32::ActAcc::OBJID_HSCROLL()} = 'OBJID_HSCROLL';
-		$ObjectId{Win32::ActAcc::OBJID_SIZEGRIP()} = 'OBJID_SIZEGRIP';
-		$ObjectId{Win32::ActAcc::OBJID_CARET()} = 'OBJID_CARET';
-		$ObjectId{Win32::ActAcc::OBJID_CURSOR()} = 'OBJID_CURSOR';
-		$ObjectId{Win32::ActAcc::OBJID_ALERT()} = 'OBJID_ALERT';
-		$ObjectId{Win32::ActAcc::OBJID_SOUND()} = 'OBJID_SOUND';
-	}
-	my $oik = shift;
-	return $ObjectId{$oik};
-}
-
-sub EventConstantName
-{
-	if (!$EventName_setup)
-	{
-		$EventName_setup = 1;
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_SOUND()} = 'EVENT_SYSTEM_SOUND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_ALERT()} = 'EVENT_SYSTEM_ALERT';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_FOREGROUND()} = 'EVENT_SYSTEM_FOREGROUND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_MENUSTART()} = 'EVENT_SYSTEM_MENUSTART';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_MENUEND()} = 'EVENT_SYSTEM_MENUEND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_MENUPOPUPSTART()} = 'EVENT_SYSTEM_MENUPOPUPSTART';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_MENUPOPUPEND()} = 'EVENT_SYSTEM_MENUPOPUPEND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_CAPTURESTART()} = 'EVENT_SYSTEM_CAPTURESTART';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_CAPTUREEND()} = 'EVENT_SYSTEM_CAPTUREEND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_MOVESIZESTART()} = 'EVENT_SYSTEM_MOVESIZESTART';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_MOVESIZEEND()} = 'EVENT_SYSTEM_MOVESIZEEND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_CONTEXTHELPSTART()} = 'EVENT_SYSTEM_CONTEXTHELPSTART';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_CONTEXTHELPEND()} = 'EVENT_SYSTEM_CONTEXTHELPEND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_DRAGDROPSTART()} = 'EVENT_SYSTEM_DRAGDROPSTART';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_DRAGDROPEND()} = 'EVENT_SYSTEM_DRAGDROPEND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_DIALOGSTART()} = 'EVENT_SYSTEM_DIALOGSTART';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_DIALOGEND()} = 'EVENT_SYSTEM_DIALOGEND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_SCROLLINGSTART()} = 'EVENT_SYSTEM_SCROLLINGSTART';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_SCROLLINGEND()} = 'EVENT_SYSTEM_SCROLLINGEND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_SWITCHSTART()} = 'EVENT_SYSTEM_SWITCHSTART';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_SWITCHEND()} = 'EVENT_SYSTEM_SWITCHEND';
-		$EventName{Win32::ActAcc::EVENT_SYSTEM_MINIMIZESTART()} = 'EVENT_SYSTEM_MINIMIZESTART';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_CREATE()} = 'EVENT_OBJECT_CREATE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_DESTROY()} = 'EVENT_OBJECT_DESTROY';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_SHOW()} = 'EVENT_OBJECT_SHOW';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_HIDE()} = 'EVENT_OBJECT_HIDE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_REORDER()} = 'EVENT_OBJECT_REORDER';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_FOCUS()} = 'EVENT_OBJECT_FOCUS';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_SELECTION()} = 'EVENT_OBJECT_SELECTION';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_SELECTIONADD()} = 'EVENT_OBJECT_SELECTIONADD';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_SELECTIONREMOVE()} = 'EVENT_OBJECT_SELECTIONREMOVE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_SELECTIONWITHIN()} = 'EVENT_OBJECT_SELECTIONWITHIN';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_STATECHANGE()} = 'EVENT_OBJECT_STATECHANGE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_LOCATIONCHANGE()} = 'EVENT_OBJECT_LOCATIONCHANGE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_NAMECHANGE()} = 'EVENT_OBJECT_NAMECHANGE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_DESCRIPTIONCHANGE()} = 'EVENT_OBJECT_DESCRIPTIONCHANGE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_VALUECHANGE()} = 'EVENT_OBJECT_VALUECHANGE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_PARENTCHANGE()} = 'EVENT_OBJECT_PARENTCHANGE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_HELPCHANGE()} = 'EVENT_OBJECT_HELPCHANGE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_DEFACTIONCHANGE()} = 'EVENT_OBJECT_DEFACTIONCHANGE';
-		$EventName{Win32::ActAcc::EVENT_OBJECT_ACCELERATORCHANGE()} = 'EVENT_OBJECT_ACCELERATORCHANGE';
-	}
-	my $ek = shift;
-	return $EventName{$ek};
-}
-
-#deprecate nav: use dig
-sub nav
-{
-	my $ao = shift;
-
-	# Default to the desktop window
-	$ao = Win32::ActAcc::AccessibleObjectFromWindow(Win32::ActAcc::GetDesktopWindow()) unless defined($ao);
-
-	my $pChain = shift;
-	my $level = shift;
-	
-	$level = 0 unless defined($level);
-
-	my $rv;
-
-	my @chain = @{$pChain};
-	my $isLeaf = (1==@chain);
-	#print STDERR Dumper(\@chain) . "\n";
-	my $seeking = shift @chain; # string {role}title OR hashref {name,role,...}
-	my $seekingRole;
-	my $seekingName;
-	if (ref($seeking) eq 'HASH')
-	{
-		$seekingRole = $$seeking{'role'}; # may be undef OR localized name
-		$seekingName = $$seeking{'name'}; # may be string OR regexp OR undef
-	}
-	else
-	{
-		$seekingRole = undef;
-		$seekingName = $seeking;
-		if ($seekingName =~ /^\{(.*)\}/)
-		{
-			$seekingRole = $1;
-			$seekingName = $';
-			if (0==length($seekingName)) { $seekingName = undef; }
-		}
-	}
-
-	#print STDERR (' ' x $level)."Looking for role=$seekingRole, name=$seekingName\n";
-
-	my @ch = $ao->AccessibleChildren();
-	my $ch;
-	my $client;
-	foreach $ch (@ch)
-	{
-		my $rc = $ch->get_accRole();
-		if (Win32::ActAcc::ROLE_SYSTEM_CLIENT() == $rc) { $client = $ch; }
-
-		# does it match?
-		my $chName = $ch->get_accName();
-		$chName = "" unless defined($chName);
-
-		my $nameMatches;
-		if (!defined($seekingName))
-		{
-			$nameMatches = 1;
-		}
-		else
-		{
-			if (ref($seekingName) eq 'Regexp')
+	my $min = shift;
+	my @whole = @_;
+	my @trie = Text::Trie::Trie(@whole);
+	my %abbrev;
+	my @pfx;
+	Text::Trie::walkTrie(
+		sub {
+			my $tail = shift; 
+			my $pfx = join("", @pfx); 
+			my $abbr = $pfx . substr($tail,0,1);
+			if (length($abbr) < $min)
 			{
-				$nameMatches = $chName =~ /$seekingName/;
+				$abbr = substr($pfx . $tail, 0, $min);
 			}
-			else
-			{
-				$nameMatches = $chName eq $seekingName;
-			}
-		}
-
-		next unless $nameMatches;
-
-		if (defined($seekingRole))
-		{
-			my $chRole = Win32::ActAcc::GetRoleText($ch->get_accRole());
-			next unless $chRole eq $seekingRole;
-		}
-
-		# if so, recurse OR return.
-		if (!$isLeaf)
-		{
-			$rv = Win32::ActAcc::nav($ch, \@chain, 1+$level);
-			last if (defined($rv));
-		}
-		else
-		{
-			$rv = $ch;
-		}
-	}
-
-	# Traverse client area, if no direct hit and there is a client.
-	if (!defined($rv) && defined($client))
-	{
-		$rv = nav($client, $pChain, 1+$level);
-	}
-
-	return $rv;
+			$abbrev{$pfx . $tail} = $abbr;
+		}, #$singlesub
+		sub {my $ad = shift; push(@pfx, $ad); }, #,$headsub
+		sub {},#,$notsinglesub
+		sub {}, #,$sepsub
+		sub {}, #,$opensub
+		sub {pop @pfx; }, #,$closesub
+		@trie);
+	return %abbrev;
 }
 
-#deprecate navlist: use dig
-sub navlist
-#never debugged
+sub GetStateTextAbbreviations
 {
-	my $ao = shift;
-	my $pChain = shift;
-	my $level = shift;
-	my $pResults = shift;
-
-	# Default to the desktop window
-	$ao = Win32::ActAcc::AccessibleObjectFromWindow(Win32::ActAcc::GetDesktopWindow()) unless defined($ao);
-
-	$level = 0 unless defined($level);
-
-	my @chain = @{$pChain};
-	my $isLeaf = (1==@chain);
-	#print STDERR Dumper(\@chain) . "\n";
-	my $seeking = shift @chain;
-	my $seekingRole = '';
-	my $seekingName = $seeking;
-	if ($seeking =~ /^\{(.*)\}/)
+	if (!defined($pStateAbbrev))
 	{
-		$seekingRole = $1;
-		$seekingName = $';
+		my @statenames;
+		#tie @statenames, Array::Unique::; # ActiveState doesn't offer Array::Unique PPM
+		push(@statenames, map(Win32::ActAcc::GetStateText(eval("Win32::ActAcc::$_()")), @Win32::ActAcc::statesk));
+        my %uniquer = map( ($_,undef), @statenames );
+        @statenames = keys(%uniquer);
+		my %x = DistinctAbbreviations(1, @statenames);
+		$pStateAbbrev = \%x;
 	}
-
-	#print STDERR (' ' x $level)."Looking for role=$seekingRole, name=$seekingName\n";
-
-	my @ch = $ao->AccessibleChildren();
-print STDERR "---\n" . join("\n", map($_->describe(), @ch)) . "\n";
-
-	my $ch;
-	my $isSole = (1==@ch);
-	foreach $ch (@ch)
-	{
-		# does it match?
-		my $chName = $ch->get_accName();
-		$chName = "" unless defined($chName);
-		my $chRole = "";
-		eval { $chRole = Win32::ActAcc::GetRoleText($ch->get_accRole()); };
-
-		my $jatch = ($chName eq $seekingName) && (!defined($seekingRole) || ($chRole eq $seekingRole));
-		if ($isSole && !$jatch && @chain)
-		{
-			$jatch = ($chName eq "") || ($ch->get_accRole() == Win32::ActAcc::ROLE_SYSTEM_CLIENT());
-		}
-
-		if ($jatch)
-		{
-			if (!$isLeaf)
-			{
-				# look deeper
-				Win32::ActAcc::navlist($ch, \@chain, 1+$level, $pResults);
-			}
-			else
-			{
-				# no more criteria to match: we have a hit.
-				push(@$pResults, $ao);
-			}
-		}
-		$isSole = 0;
-	}
+	return $pStateAbbrev;
 }
 
-#deprecated: use the oo version
-sub menuPick
-{
-	my $self = shift;
-        my $ppeh = shift; # obsolete.
-        $self->menuPick(@_);
-}
-
+# testable('GetStateTextComposite.full')
+# testable('GetStateTextComposite.abbrev')
 sub GetStateTextComposite
 {
 	my $bits = shift;
+	my $abbrev = shift; #optional
 	my @stateTexts;	
+	my $abbrevs = GetStateTextAbbreviations() if ($abbrev);
 	my $acc = 1;  # bit-0
 	for (my $b = 0; $b < 32; $b++)
 	{
 		if ($bits & $acc)
 		{
-			push(@stateTexts, GetStateText($acc));	
+			my $statename = GetStateText($acc);
+			push(@stateTexts, $abbrev && exists($$abbrevs{$statename}) ? $$abbrevs{$statename} : $statename);	
 		}
 		$acc <<= 1;
 	}
 	return join('+', @stateTexts);
+}
+
+sub mouseop
+{
+	my $x = shift;
+	my $y = shift;
+    my $mouseop = shift;
+	my $peventMonitorOptional = shift;
+
+    if ($LOG_ACTIONS)
+      {
+        my $over = AccessibleObjectFromPoint($x, $y) || '';
+        print STDERR "Action: Mouse '$mouseop' @ $x,$y  $over\n";
+      }
+
+	if (defined($peventMonitorOptional))
+	{
+		$$peventMonitorOptional->activate(1);
+	}
+        Win32::ActAcc::IEH()->clear();
+
+	Win32::ActAcc::mouse_button($x, $y, $mouseop);
 }
 
 sub click
@@ -491,34 +288,118 @@ sub click
 	my $y = shift;
 	my $peventMonitorOptional = shift;
 
-	if (defined($peventMonitorOptional))
-	{
-		$$peventMonitorOptional->activate(1);
-	}
-        Win32::ActAcc::IEH()->clear();
+    # Delay so two unrelated clicks won't make a double-click.
+    my $dct = GetDoubleClickTime();
+    #Time::HiRes::usleep(1000 * $dct);
 
-	Win32::ActAcc::mouse_button($x, $y, "du");
+    mouseop($x, $y, 'du', $peventMonitorOptional);
 }
 
+sub rightclick
+{
+	my $x = shift;
+	my $y = shift;
+	my $peventMonitorOptional = shift;
+
+    mouseop($x, $y, 'DU', $peventMonitorOptional);
+}
+
+sub mouseover
+{
+	my $x = shift;
+	my $y = shift;
+	my $peventMonitorOptional = shift;
+
+    mouseop($x, $y, 'm', $peventMonitorOptional);
+}
+
+# testable('Desktop')
 sub Desktop
 {
 	return AccessibleObjectFromWindow(GetDesktopWindow());
 }
 
+# vec_from_rolelist and vec_allroles
+
+sub vec_from_rolelist
+{
+	my $rolelist = shift;
+	croak("rolelist must be an ARRAY") unless ref($rolelist)eq 'ARRAY';
+	my $rv = "";
+	my $rolespec;
+	foreach $rolespec (@$rolelist)
+	{
+		my $rolenum = RoleFriendlyNameToNumber($rolespec);
+		vec($rv, $rolenum, 1) = 1;
+	}
+	return $rv;
+}
+
+sub vec_allroles
+{
+	# slow the first time
+	my $ans = vec_from_rolelist(\@rolesk);
+	
+	# optimize for next time
+    no warnings ('redefine'); # test harness shan't sense failure
+	*vec_allroles = sub{ return $ans; };
+	
+	return $ans;	
+}
+
+# deprecated
+sub nav
+  {
+    my $ao = shift;
+	my $pChain = shift;
+
+    warn("Win32::ActAcc::nav is deprecated. Please use dig.\n");
+
+	# Default to the desktop window
+	$ao = Win32::ActAcc::AccessibleObjectFromWindow(Win32::ActAcc::GetDesktopWindow()) unless defined($ao);
+
+    my $rv = $ao->dig($pChain, +{'max'=>1, 'min'=>0}); 
+    return $rv;
+  }
+
+# deprecated
+sub menuPick
+  {
+	my $ao = shift;
+    my $ppeh = shift; # obsolete.
+
+    warn("Win32::ActAcc::menuPick is deprecated. Please use $ao->menuPick.\n");
+
+    $ao->menuPick(@_);
+  }
+
+
+
 package Win32::ActAcc::Iterator;
 use vars qw(@ISA);
 use Carp;
+use Scalar::Util qw(weaken);
 
 sub new
 {
     my $class = shift;
     my $aoroot = shift;
+    my $flags = shift; # optional
     croak "undef iteration root?" unless defined($aoroot);
-    my $self = +{'aoroot'=>$aoroot};
+    my $self = +{'aoroot'=>$aoroot, 'flags'=>+{}};
+    if ('HASH' eq ref($flags))
+    {
+        foreach (keys %$flags)
+        {
+            ${$$self{'flags'}}{$_} = $$flags{$_};
+        }
+    }
     bless $self, $class;
     return $self;
 }
 
+# in: AO
+# out: (none)
 sub open
 {
     my $self = shift;
@@ -549,7 +430,7 @@ sub all
         $self->open();
     }
     my $ao;
-    while ($ao = $self->nextAO())
+    while (defined($ao = $self->nextAO()))
     {
         push @rv, $ao;
     }
@@ -566,7 +447,18 @@ sub leaveOpen
     my $lo = shift; # discard
 }
 
-
+sub set_child_source
+  {
+    my $self = shift;
+    my $child = shift;
+    if (defined($child)) 
+      {
+        my $b = $child->baggage();
+        die unless 'HASH' eq ref($b);
+        $$b{'::source'} = $$self{'aoroot'};
+        weaken($$b{'::source'});
+      }
+  }
 
 require Win32::ActAcc::AO;
 

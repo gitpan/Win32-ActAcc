@@ -1,177 +1,59 @@
 NAME
-    Win32::ActAcc - `Active Accessibility' for task automation, GUI testing
+    Win32::ActAcc 1.1 - Active Accessibility client in Perl
 
 SYNOPSIS
-    *   Active Accessibility client API
+    Win32::ActAcc enables Perl scripts to examine the GUI and monitor
+    WinEvents, as screen readers do.
 
-         use Win32::OLE;
-         use Win32::ActAcc;
-         Win32::OLE->Initialize();
-         $ao = AccessibleObjectFromPoint(320,240);
-         @children = $ao->AccessibleChildren();
-         $hwnd = $ao->WindowFromAccessibleObject();
-         $ao2 = AccessibleObjectFromWindow($hwnd);
+    In this Perl extension, you'll find familiar Active Accessibility
+    functions, along with novelties such as iterators to accommodate
+    laziness and impatience.
 
-    *   IAccessible
+    For documentation (on the Perl extension, not Active Accessibility
+    itself), run "perldoc Win32::ActAcc" or view ActAcc.html after
+    installation.
 
-         print $ao->get_accName() . "\n";
-         print $ao->get_accValue() . "\n";
-         print $ao->get_accDefaultAction() . "\n";
-         $statebits = $ao->get_accState();
-         $rolenum = $ao->get_accRole();
-         $ch1 = $ao->accNavigate(NAVDIR_FIRSTCHILD());
-         $p = $ao->get_accParent();
-
-    *   WinEvents
-
-         $aoNotepad = Win32::ActAcc::waitForEvent(
-            +{ 'event'=>EVENT_OBJECT_SHOW(),
-               'name'=>qr/Notepad/,
-               'role'=>ROLE_SYSTEM_WINDOW()});
-
-    *   Iterators
-
-        Win32::ActAcc's iterators can drill into menus and outlines, in
-        addition to the Active Accessibility object hierarchy.
-
-         # display children of $ao
-         my $iter = $ao->iterator();
-         $iter->open();
-         my $aoi;
-         while ($aoi = $iter->nextAO())
-         {
-             print $aoi->describe() . "\n";
-         }
-         $iter->close();
-
-    *   Finding accessible objects
-
-         # find any descendant
-         $notepadTextArea = $aoNotepad->drill("{editable text}", +{'max'=>1, 'min'=>1});
-
-         # find immediate child
-         $AimConversation = $aoIM->dig( +[ +{'role'=>ROLE_SYSTEM_WINDOW(), 'name'=>qr/\<HTML\>/ } ] );
-
-         # follow path
-         $tray = Win32::ActAcc::Desktop()->dig([ 
-                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=>'', 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}}, 
-                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=>'', 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}}, 
-                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=>'', 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}}, 
-                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_WINDOW(), 'name'=>'Tray', 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}}, 
-                    +{'role'=>Win32::ActAcc::ROLE_SYSTEM_PAGETABLIST(), 'state'=>+{'mask'=>Win32::ActAcc::STATE_SYSTEM_INVISIBLE(), 'value'=>0}} ], 
-                +{'max'=>1,'min'=>1} );
-
-    *   Task-automation conveniences
-
-         use Win32::OLE;
-         use Win32::ActAcc;
-         use Win32::ActAcc::Shell2000;
-         #
-         Win32::OLE->Initialize();
-         $menu = Win32::ActAcc::Shell2000::StartButtonMenu();
-         Win32::ActAcc::clearEvents();
-         $menu->menuPick([ qr/^Programs/, qr/Accessories/i, qr/Notepad/i ]);
-         $aoNotepad = Win32::ActAcc::waitForEvent(
-            +{ 'event'=>EVENT_OBJECT_SHOW(),
-               'name'=>qr/Notepad/,
-               'role'=>ROLE_SYSTEM_WINDOW()});
-         $aoNotepad->menuPick(+["File", "Exit"]);
-
-    *   Tools and samples
-
-        *   aaDigger.pl shows how to traverse the tree of accessible objects.
-
-        *   aaEvents.pl shows you the WinEvents that reflect what you're doing
-            with the GUI.
-
-        *   aaWhereAmI.pl shows how to link a pixel location with its
-            accessible object.
-
-        *   elizaNotepad.pl, just for fun, uses Notepad as the user interface
-            to Chatbot::Eliza.
-
-        See under the section on "Tools" for more about aaDigger, aaEvents,
-        and aaWhereAmI.
-
-    You'll want to additionally use Win32::GuiTest, and other Win32 modules,
-    if you want your script to click, type, manipulate the clipboard, etc.
-
-    For full documentation, refer to ActAcc.html inside the zip. You will also
-    find many useful samples in the '.t' (test-case) files.
+    For clicking and typing and such, you may use Win32::GuiTest to
+    complement the view of the GUI you get from Active Accessibility.
 
 INSTALLATION
-    You can install Win32::ActAcc by compiling it from source code, or, if you
-    have ActivePerl, you can install it using PPM, in which case you don't
-    need a C++ compiler.
+    Building the extension from source code requires Visual C++ 6.0 SP 4 or
+    later, and the "Platform SDK" of July 2000 or later. (The C++ compiler
+    in the ".NET Framework 1.0" SDK will do, but it creates a dependency on
+    a .NET DLL that not everyone has.) The "nmake test" requires
+    English-language Windows 2000 or XP.
 
-  Installation from source code
+    Reboot first, to unload any residual inproc WinEvent handlers from a
+    prior version of Win32::ActAcc.
 
-     perl makefile.pl
+     perl Makefile.PL
      nmake 
-     nmake install
      nmake test
+     nmake install
 
-    Yes, you have to install it before you test it. Otherwise it can't find
-    its DLL. Probably someone will figure out how to fix this.
+    "nmake test" depends on very little outside of Win32::ActAcc itself, and
+    therefore tests very few features.
 
-    The test is tenuous. It will probably work only with Windows 2000, since
-    the design and operation of Notepad changes subtly from version to
-    version. You must have Win32::GuiTest 0.6 or later.
+    A more in-depth test, "eg\playpen.pl", uses the small C# Windows Forms
+    app in the "eg\playpen" directory to exercise more features. Even this
+    simple app has been observed to present itself differently to Active
+    Accessibility on computers running different versions of Windows, so
+    your mileage may vary.
 
-    Prerequisites:
+CHANGES from version 1.0
+    You can import specific symbols, or get all of them like this:
 
-    *   You may need Visual C++ 6.0 SP 4. The C/C++ part of Win32::ActAcc
-        might not be portable to other compilers.
+     use Win32::ActAcc qw(:all); 
 
-    *   You need the July 2000 "Platform SDK". Earlier versions of the Active
-        Accessibility SDK could give problems compiling.
+    "dig" allows paths to omit "client" only by request:
 
-    *   The test suite requires Notepad.exe and Explorer.exe on the path.
-        Also, it requires Win32::GuiTest.
+     $Win32::ActAcc::IMPLICIT_CLIENT = 1; # deprecated
 
-    *   The Eliza-AOLInstantMessenger sample requires up-to-date HTML parsing
-        modules. It will tell you if yours are missing or out-of-date.
-
-  Installation for ActivePerl users (PPM)
-
-    ActivePerl users can install Win32::ActAcc using PPM.
-
-    1   Unzip the zip (Win32-ActAcc-n.n.zip). Make sure your unzip program
-        preserved the directory tree: for example, you should see
-        Win32-ActAcc.tar.gz in an "x86" subdirectory under the directory that
-        contains ActAcc.html (the documentation).
-
-    2   Open a command prompt window.
-
-    3   In the command prompt, "cd" to the directory that contains
-        ActAcc.html.
-
-    4   In the command prompt, issue the following command.
-
-         ppm install --location=. Win32-ActAcc
-
-    To check the installation, you may try aaDigger.pl. The test suite (nmake
-    test) doesn't seem to work if you do the ppm installation.
-
-  Files Installed
-
-    *   In bin: aaDigger.bat and aaDigger.pl, aaEvents.bat and aaEvents.pl,
-        aaWhereAmI.bat and aaWhereAmI.pl
-
-    *   In site\lib\Win32: aaDigger.pl, aaEvents.pl, aaWhereAmI.pl, ActAcc.pm,
-        ActAcc.pod
-
-        In site\lib\Win32\ActAcc: aaExplorer.pm
-
-    *   In site\lib\auto\Win32\ActAcc: ActAcc.dll, ActAccEM.dll
+    The "Start Menu" module is history. Each revision of Windows outsmarted
+    it.
 
 COPYRIGHT
-    Copyright 2001, Phill Wolf. All rights reserved, including, without
-    limitation, motion-picture rights.
+    Copyright 2000-2004, Phill Wolf.
 
-    You may use Win32::ActAcc under the terms of the Artistic License, as
-    specified in the README file of the Perl distribution.
-
-AUTHOR
-    Phill Wolf, pbwolf@cpan.org
+    pbwolf@cpan.org
 

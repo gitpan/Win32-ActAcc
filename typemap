@@ -1,3 +1,7 @@
+# Copyright 2000-2003, Phill Wolf.  See README.
+# 
+# Win32::ActAcc (Active Accessibility)
+
 HWND	T_HWND
 ActAcc *	T_PTRACTACC
 EventMonitor * T_EVENTMONITOR

@@ -1,9 +1,13 @@
+# Copyright 2001-2004, Phill Wolf.  See README. -*-Mode: fundamental;-*-
+# Win32::ActAcc (Active Accessibility) C-extension source file
+
 int
 Equals(a,b)
 	INPUT:
 	ActAcc * a
 	ActAcc * b
 	CODE:
+    SetLastError(0);
 	RETVAL = !!((a->ia == b->ia) && (a->id == b->id));
 	if (!RETVAL && a->id==CHILDID_SELF && b->id==CHILDID_SELF)
 	{
@@ -14,8 +18,19 @@ Equals(a,b)
 		{
 			hr = WindowFromAccessibleObject(b->ia, &hb);
 			if (SUCCEEDED(hr))
-				RETVAL = 2*!!(ha == hb);			
+            {
+                SetLastError(0);
+				RETVAL = 2*!!(ha == hb);
+            }
+            else
+            {
+                WARN_ABOUT_WINERROR();
+            }
 		}
+        else
+        {
+            WARN_ABOUT_WINERROR();
+        }
 	}
 	OUTPUT:
 	RETVAL
@@ -25,9 +40,9 @@ Release(p)
 	INPUT:
 	ActAcc * p
 	CODE:
+    SetLastError(0);
 	if (p->ia) // idempotent
 	{
-		rmv_from_hash(p);
 		IAccessible_Release(p->ia);
 		p->ia = 0;
 	}
@@ -39,126 +54,110 @@ DESTROY(p)
 	CODE:
 	ActAcc_free_incl_hash(p);
 
-HWND
+# testable('get_accRole')
+# in: AO
+# out: role (number)
+void
+get_accRole(p)
+	INPUT:
+	ActAcc * p
+	PPCODE:
+	XPUSHs(uintAccessor(p, p->ia->lpVtbl->get_accRole, __FUNCTION__));
+
+void
+get_accState(p)
+	INPUT:
+	ActAcc * p
+	PPCODE:
+	XPUSHs(uintAccessor(p, p->ia->lpVtbl->get_accState, __FUNCTION__));
+
+# testable('get_accName')
+# in: AO
+# out: name (string)
+void
+get_accName(p)
+	INPUT:
+	ActAcc * p
+	PPCODE:
+	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accName, __FUNCTION__));
+
+# testable('WindowFromAccessibleObject')
+# in: AO
+# out: HWND
+# error_conditions: undef if AO represents a child-ID, or error is reported by AA
+void
 WindowFromAccessibleObject(p)
 	INPUT:
 	ActAcc * p
 	PREINIT:
 	HRESULT hr = S_OK;
 	HWND hwnd = 0;
-	CODE:
-	croakIfNullIAccessible(p);
-	if (p->id != CHILDID_SELF)
-		croak("WindowFromAccessibleObject only works for CHILDID_SELF");
-	hr = WindowFromAccessibleObject(p->ia, &hwnd);
-	croakIf(hr, S_OK != hr, "WindowFromAccessibleObject");
-	RETVAL = hwnd;
-	OUTPUT:
-	RETVAL
-
-int
-get_accRole(p)
-	INPUT:
-	ActAcc * p
-	PREINIT:
-	HRESULT hr = S_OK;
-	VARIANT childid;
-	VARIANT vrole;
-	CODE:
-	croakIfNullIAccessible(p);
-	childid.vt=VT_I4;
-	childid.lVal=p->id;
-	VariantInit(&vrole);
-	hr = IAccessible_get_accRole(p->ia, childid, &vrole);
-	croakIf(hr, S_OK != hr, "get_accRole");
-	if (vrole.vt==VT_I4)
-		RETVAL = vrole.lVal;
-	else
-		croak("illegal response from get_accRole");
-	VariantClear(&childid);
-	VariantClear(&vrole);
-	OUTPUT:
-	RETVAL
-
-int
-get_accState(p)
-	INPUT:
-	ActAcc * p
-	PREINIT:
-	HRESULT hr = S_OK;
-	VARIANT childid;
-	VARIANT v;
-	CODE:
-	croakIfNullIAccessible(p);
-	childid.vt=VT_I4;
-	childid.lVal=p->id;
-	VariantInit(&v);
-	hr = IAccessible_get_accState(p->ia, childid, &v);
-	croakIf(hr, S_OK != hr, "get_accState");
-	if (v.vt==VT_I4)
-		RETVAL = v.lVal;
-	else
-		croak("illegal response from get_accState");
-	VariantClear(&childid);
-	VariantClear(&v);
-	OUTPUT:
-	RETVAL
-
-void
-get_accName(p)
-	INPUT:
-	ActAcc * p
 	PPCODE:
-	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accName));
+    SetLastError(0);
+	croakIfNullIAccessible(p);
+	if (p->id == CHILDID_SELF)
+	{
+		hr = WindowFromAccessibleObject(p->ia, &hwnd);
+		if (S_OK == hr)
+        {
+          XPUSHs(sv_2mortal(newSVuv((unsigned)hwnd)));
+          SetLastError(0);
+        }
+        else
+        {
+            WARN_ABOUT_WINERROR();
+        }
+	}
 
+# testable('get_accValue')
 char *
 get_accValue(p)
 	INPUT:
 	ActAcc * p
 	PPCODE:
-	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accValue));
+	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accValue, __FUNCTION__));
 
 char *
 get_accDescription(p)
 	INPUT:
 	ActAcc * p
 	PPCODE:
-	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accDescription));
+	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accDescription, __FUNCTION__));
 
 char *
 get_accHelp(p)
 	INPUT:
 	ActAcc * p
 	PPCODE:
-	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accHelp));
+	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accHelp, __FUNCTION__));
 
 char *
 get_accDefaultAction(p)
 	INPUT:
 	ActAcc * p
 	PPCODE:
-	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accDefaultAction));
+	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accDefaultAction, __FUNCTION__));
 
 char *
 get_accKeyboardShortcut(p)
 	INPUT:
 	ActAcc * p
 	PPCODE:
-	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accKeyboardShortcut));
+	XPUSHs(textAccessor(p, p->ia->lpVtbl->get_accKeyboardShortcut, __FUNCTION__));
 
-int
+void
 get_accChildCount(p)
 	INPUT:
 	ActAcc * p
 	PREINIT:
 	long cch = 0;
-	CODE:
+	PPCODE:
+    SetLastError(0);
 	croakIfNullIAccessible(p);
 	if (CHILDID_SELF == p->id) 
 		cch = getAccChildCount(p->ia);
-	RETVAL = cch;
-	OUTPUT:
-	RETVAL
+    if (cch != -1)
+        XPUSHs(sv_2mortal(newSViv(cch)));
 
 void
 get_accChild(p, id)
@@ -168,25 +167,36 @@ get_accChild(p, id)
 	PREINIT:
 	HRESULT hr = S_OK;
 	IDispatch *pDispatch = 0;
-        ActAcc *pActAcc = 0;
+    ActAcc *pActAcc = 0;
 	VARIANT vch;
 	PPCODE:
 	croakIfNullIAccessible(p);
-	if (CHILDID_SELF != p->id) 
-		croak("Item has no children");
-	VariantInit_VT_I4(&vch, id);
-	hr = IAccessible_get_accChild(p->ia, vch, &pDispatch);
-	if (S_OK == hr)
-		pActAcc = ActAcc_from_IDispatch(pDispatch);
-	else if ((S_FALSE == hr) || (E_INVALIDARG == hr))
-		pActAcc = ActAcc_from_IAccessible(p->ia, id);
-	else
-	{
-		croak("Oops5");
-	}
-	XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(pActAcc), pActAcc));
-	if (pDispatch) IDispatch_Release(pDispatch);
+    SetLastError(0);
+	if (CHILDID_SELF == p->id) 
+    {
+    	VariantInit_VT_I4(&vch, id);
+    	hr = IAccessible_get_accChild(p->ia, vch, &pDispatch);
+    	if (S_OK == hr)
+    		pActAcc = ActAcc_from_IDispatch(pDispatch);
+    	else if (S_FALSE == hr)
+    		pActAcc = ActAcc_from_IAccessible(p->ia, id);
+        else
+        {
+            WARN_ABOUT_WINERROR();
+        }
+        if (pActAcc)
+        {
+        	XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(pActAcc), pActAcc));
+            SetLastError(0);
+        }
 
+    	if (pDispatch) IDispatch_Release(pDispatch);
+    }
+
+# testable('AccessibleChildren.all')
+# testable('AccessibleChildren.default')
+# in: AO, optional: state-bits, state-bit-values, optional: maximum entries in returned list
+# out: list of AO
 void
 AccessibleChildren(p, ...)
 	INPUT:
@@ -199,20 +209,26 @@ AccessibleChildren(p, ...)
 	VARIANT *varCh = 0;
 	int i;
 	ActAcc *aa = 0;
-	// By default, find only visible windows: where STATE_SYSTEM_INVISIBLE is not set.
-	int sigStateBits = STATE_SYSTEM_INVISIBLE;
+	// By default, find only all visible windows: where STATE_SYSTEM_INVISIBLE is not set.
+	int sigStateBits = STATE_SYSTEM_INVISIBLE|STATE_SYSTEM_OFFSCREEN;
 	int cmpStateBits = 0;
+	int max = -1;
 	PPCODE:
+    SetLastError(0);
 	if (items > 2)
 	{
 		sigStateBits = SvIV(ST(1));
 		cmpStateBits = SvIV(ST(2)); 
 	}
+	if (items > 3)
+	{
+		max = SvIV(ST(3));
+	}
 	croakIfNullIAccessible(p);
 	if (CHILDID_SELF == p->id) 
 	{
 		VariantInit_VT_I4(&childIdSelf, CHILDID_SELF);
-		nChildren = getAccChildCount(p->ia);
+		nChildren = (max<1)? getAccChildCount(p->ia) : max; 
 
 		New(7, varCh, nChildren, VARIANT); 
 		for (i = 0; i < nChildren; i++)
@@ -238,10 +254,6 @@ AccessibleChildren(p, ...)
 				{
 					aa = ActAcc_from_IAccessible(p->ia, varCh[i].lVal);
 				}
-				else
-				{
-					croak("hmm99");
-				}
 
 				// Eliminate Accessible Object if it fails the test
 				if ((sigStateBits != 0) && aa)
@@ -253,6 +265,10 @@ AccessibleChildren(p, ...)
 					VariantInit(&vs);
 					VariantInit_VT_I4(&idChild, aa->id);
 					hr = IAccessible_get_accState(aa->ia, idChild, &vs);
+                    if (S_OK != hr)
+                    {
+                        WARN_ABOUT_WINERROR();
+                    }
 					if ((S_OK == hr) && (VT_I4 == vs.vt))
 					{
 						long L = vs.lVal;
@@ -274,17 +290,34 @@ AccessibleChildren(p, ...)
 
 				VariantClear(&varCh[i]);
 			}
+            SetLastError(0);
 		}
+        else
+        {
+            WARN_ABOUT_WINERROR();
+        }
+        Safefree(varCh);
 	}
 
+# testable('get_accParent.window')
+# testable('get_accParent.desktop')
+# testable('get_accParent.child_id')
+# EITHER:
+# in: AO that has CHILDID_SELF
+# out: AO that the in:AO reports as its parent
+# OR:
+# in: AO that has a child ID
+# out: AO that has the same IAccessible but CHILDID_SELF
+# --
+# error_conditions: undef
 void
 get_accParent(p)
 	INPUT:
 	ActAcc * p
 	PREINIT:
 	HRESULT hr = S_OK;
-	VARIANT vch;
 	PPCODE:
+    SetLastError(0);
 	croakIfNullIAccessible(p);
 	if (CHILDID_SELF != p->id) 
 	{
@@ -298,17 +331,17 @@ get_accParent(p)
 		if (S_OK == hr)
 		{
 			ActAcc *aa = ActAcc_from_IDispatch(pDispatch);
-			XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
+            if (aa)
+            {
+			    XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
+                SetLastError(0);
+            }
 			IDispatch_Release(pDispatch);
 		}
-		else if (S_FALSE == hr)
-		{
-			XPUSHs(&PL_sv_undef);
-		}
-		else
-		{
-			croak("Oops5");
-		}
+        else
+        {
+            WARN_ABOUT_WINERROR();
+        }
 	}
 
 void
@@ -319,13 +352,10 @@ get_accFocus(p)
 	HRESULT hr = S_OK;
 	VARIANT v;//IDispatch *pDispatch = 0;
 	PPCODE:
+    SetLastError(0);
 	croakIfNullIAccessible(p);
 	VariantInit(&v);
-	if (CHILDID_SELF != p->id) 
-	{
-		croak("Items do not support this - TBD - make ActAcc smarter");
-	}
-	else
+	if (CHILDID_SELF == p->id) 
 	{
 		hr = IAccessible_get_accFocus(p->ia, &v);
 		if (S_OK == hr)
@@ -333,24 +363,23 @@ get_accFocus(p)
 			if (VT_DISPATCH == v.vt)
 			{
 				ActAcc *aa = ActAcc_from_IDispatch(v.pdispVal);
-				XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
+                if (aa)
+				    XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
 			}
 			else if (VT_I4 == v.vt)
 			{
 				ActAcc *aa = ActAcc_from_IAccessible(p->ia, v.lVal);
-				XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
-			}
-			else if (VT_EMPTY == v.vt)
-			{
-				XPUSHs(&PL_sv_undef);
+                if (aa)
+                {
+				    XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(aa), aa));
+                    SetLastError(0);
+                }
 			}
 		}
-		else if ((S_FALSE == hr) || (DISP_E_MEMBERNOTFOUND == hr))
-			XPUSHs(&PL_sv_undef);
-		else
-		{
-			croak("Egad1");
-		}
+        else if (DISP_E_MEMBERNOTFOUND != hr)
+        {
+            WARN_ABOUT_WINERROR();
+        }
 	}
 	VariantClear(&v);
 
@@ -361,23 +390,35 @@ accDoDefaultAction_(p)
 	PREINIT:
 	VARIANT childId;
 	HRESULT hrAC = S_OK;
-	CODE:
+	PPCODE:
+    SetLastError(0);
 	croakIfNullIAccessible(p);
 	VariantInit_VT_I4(&childId, p->id);
 	hrAC = IAccessible_accDoDefaultAction(p->ia, childId);
-	if (!SUCCEEDED(hrAC))
-		croakHRESULTAndWin32Error(hrAC, "accDoDefaultAction");
+    if (SUCCEEDED(hrAC))
+    {
+        XPUSHs(&PL_sv_yes);
+        SetLastError(0);
+    }
+    else if (DISP_E_MEMBERNOTFOUND == hrAC)
+        SetLastError(0);
+    else
+    {
+        WARN_ABOUT_WINERROR();
+    }
 
 int
 get_itemID(p)
 	INPUT:
 	ActAcc * p
 	CODE:
+    SetLastError(0);
 	croakIfNullIAccessible(p);
 	RETVAL = p->id;
 	OUTPUT:
 	RETVAL
 
+# testable('accSelect')
 void
 accSelect(p, flags)
 	INPUT:
@@ -386,11 +427,22 @@ accSelect(p, flags)
 	PREINIT:
 	VARIANT childId;
 	HRESULT hrAC = S_OK;
-	CODE:
+	PPCODE:
+    SetLastError(0);
 	croakIfNullIAccessible(p);
 	VariantInit_VT_I4(&childId, p->id);
 	hrAC = IAccessible_accSelect(p->ia, flags, childId);
-	croakIf(hrAC, !SUCCEEDED(hrAC), "accSelect");
+    if (SUCCEEDED(hrAC))
+    {
+        XPUSHs(&PL_sv_yes);
+        SetLastError(0);
+    }
+    else if (DISP_E_MEMBERNOTFOUND==hrAC)
+        SetLastError(0);
+    else
+    {
+        WARN_ABOUT_WINERROR();
+    }
 
 void
 accLocation(p)
@@ -401,15 +453,26 @@ accLocation(p)
 	VARIANT childId;
 	HRESULT hr;
 	PPCODE:
+    SetLastError(0);
 	croakIfNullIAccessible(p);
 	VariantInit_VT_I4(&childId, p->id);
 	hr = IAccessible_accLocation(p->ia, &left, &top, &width, &height, childId);
-	croakIf(hr, !SUCCEEDED(hr), "accLocation");
-	XPUSHs(sv_2mortal(newSViv(left)));
-	XPUSHs(sv_2mortal(newSViv(top)));
-	XPUSHs(sv_2mortal(newSViv(width)));
-	XPUSHs(sv_2mortal(newSViv(height)));
+	if (SUCCEEDED(hr))
+	{
+		XPUSHs(sv_2mortal(newSViv(left)));
+		XPUSHs(sv_2mortal(newSViv(top)));
+		XPUSHs(sv_2mortal(newSViv(width)));
+		XPUSHs(sv_2mortal(newSViv(height)));
+        SetLastError(0);
+	}
+    else if (DISP_E_MEMBERNOTFOUND == hr)
+        SetLastError(0);
+    else
+    {
+        WARN_ABOUT_WINERROR();
+    }
 
+# testable('accNavigate')
 void
 accNavigate(p, navDir)
 	INPUT:
@@ -421,20 +484,156 @@ accNavigate(p, navDir)
 	HRESULT hr;
 	ActAcc *rv = 0;
 	PPCODE:
+    SetLastError(0);
 	croakIfNullIAccessible(p);
 	VariantInit_VT_I4(&varStart, p->id);
 	hr = IAccessible_accNavigate(p->ia, navDir, varStart, &varEnd);
-	croakIf(hr, !SUCCEEDED(hr), "accNavigate");
-	if (S_FALSE != hr)
+    if (!SUCCEEDED(hr) && (DISP_E_MEMBERNOTFOUND != hr))
+    {
+        SetLastError(hr);
+        WARN_ABOUT_WINERROR();
+    }
+    else
+        SetLastError(0);
+	if (S_OK==hr)
 	{
 		if (VT_DISPATCH == varEnd.vt)
 			rv = ActAcc_from_IDispatch(varEnd.pdispVal);
 		else if (VT_I4 == varEnd.vt)
 			rv = ActAcc_from_IAccessible(p->ia, varEnd.lVal);
+    	if (rv)
+        {
+		    XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(rv), rv));
+            SetLastError(0);
+        }
 	}
 	VariantClear(&varEnd);
-	if (rv)
-		XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(rv), rv));
-	else
-		XPUSHs(&PL_sv_undef);
 
+# testable('baggage')
+# in: AO
+# out: HASH ref
+# side_effect: allocates new hash if this AO didn't already have one
+void
+baggage_get(p)
+	INPUT:
+	ActAcc * p
+	PPCODE:
+    SetLastError(0);
+	if (p->bag)
+      XPUSHs( baggage_return(p) );
+
+void
+baggage_put(p,v)
+	INPUT:
+	ActAcc * p
+    SV *v
+	PPCODE:
+    SetLastError(0);
+    baggage_free(p);
+    baggage_alloc(p, v);
+
+# in: AO
+# out: IDispatch as 'unsigned' number (useless?)
+# error_conditions: undef
+void
+get_nativeOM(p)
+	INPUT:
+	ActAcc * p
+	PREINIT:
+	int	id = OBJID_NATIVEOM;
+	HRESULT hr = S_OK;
+	IDispatch *pUnk = 0;
+	VARIANT vch;
+	PPCODE:
+    SetLastError(0);
+	croakIfNullIAccessible(p);
+	if (CHILDID_SELF == p->id) 
+	{
+		VariantInit_VT_I4(&vch, id);
+		hr = IAccessible_get_accChild(p->ia, vch, &pUnk);
+        if (SUCCEEDED(hr))
+           SetLastError(0);
+        else
+        {
+            WARN_ABOUT_WINERROR();
+        }
+		if (S_OK == hr)
+			XPUSHs(sv_2mortal(newSVuv((unsigned)pUnk)));
+		if (pUnk) IUnknown_Release(pUnk);
+	}
+
+# testable('get_accSelection.1')
+# testable('get_accSelection.multiple')
+void
+get_accSelection(p)
+    INPUT:
+    ActAcc * p
+    PREINIT:
+    VARIANT v1;
+    HRESULT hr = S_OK;
+    ActAcc * r;
+    IEnumVARIANT *iev=0;
+    long fetched=0;
+    PPCODE:
+    SetLastError(0);
+    VariantInit(&v1);
+	croakIfNullIAccessible(p);
+    hr = IAccessible_get_accSelection(p->ia, &v1);
+    if (SUCCEEDED(hr) || DISP_E_MEMBERNOTFOUND==hr)
+        SetLastError(0);
+    else
+    {
+        WARN_ABOUT_WINERROR();
+    }
+    if (S_OK == hr)
+    {
+    // four success cases:
+    //  VT_EMPTY - no selected children
+    //  VT_DISPATCH - one selected child, in pdispVal.
+    //  VT_I4 - one selected child, whose id is in lVal; may be CHILDID_SELF.
+    //  VT_UNKNOWN - get list from IEnumVARIANT in punkVal.
+        // spec doesn't say what's in the enum'd variants...
+        // we allow for I4, Dispatch, and Unknown(if IAccessible).
+    switch (v1.vt)
+    {
+    case VT_EMPTY:
+        break;
+    case VT_DISPATCH:
+    case VT_I4:
+        if (ActAcc_from_VARIANT(p, &v1, &r))
+        {
+            XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(r), r));
+            SetLastError(0);
+        }
+        VariantClear(&v1);
+        break;
+    case VT_UNKNOWN:
+    	hr = IUnknown_QueryInterface(v1.punkVal, USEGUID(IID_IEnumVARIANT), (void**)&iev);
+        if (E_NOINTERFACE == hr)
+          SetLastError(hr);
+        VariantClear(&v1);
+        if (SUCCEEDED(hr))
+        {
+        SetLastError(0);
+        for (;;)
+        {
+            hr = IEnumVARIANT_Next(iev, 1, &v1, &fetched);
+            if (S_FALSE == hr || 0==fetched)
+                break;
+            if (S_OK != hr)
+            {
+                break;
+            }
+            if (ActAcc_from_VARIANT(p, &v1, &r))
+            {
+                XPUSHs(sv_setref_pv(sv_newmortal(), packageForAO(r), r));
+            }
+        }
+        IEnumVARIANT_Release(iev);
+        }
+        else
+        {
+            WARN_ABOUT_WINERROR();
+        }
+    }
+    }

@@ -1,4 +1,4 @@
-# Copyright 2001, Phill Wolf.  See README.
+# Copyright 2001-2004, Phill Wolf.  See README.
 
 # Win32::ActAcc (Active Accessibility)
 
@@ -151,8 +151,29 @@ use vars qw(@ISA);
 @ISA = qw(Win32::ActAcc::AO);
 
 package Win32::ActAcc::Combobox;
+use strict;
 use vars qw(@ISA);
 @ISA = qw(Win32::ActAcc::AO);
+
+sub button_open
+  {
+    my $self = shift;
+    return $self->memoize_member(+['{push button}'], 'button_open');
+  }
+
+# testable('Combobox::edit_box')
+sub edit_box
+  {
+    my $self = shift;
+    return $self->memoize_member(+['{window}', '{editable text}'], 'edit_box');
+  }
+
+# testable('Combobox::spinner')
+sub spinner
+  {
+    my $self = shift;
+    return $self->memoize_member(+['{window}', '{spin box}'], 'spinner');
+  }
 
 package Win32::ActAcc::DropList;
 use vars qw(@ISA);
@@ -175,8 +196,22 @@ use vars qw(@ISA);
 @ISA = qw(Win32::ActAcc::AO);
 
 package Win32::ActAcc::SpinButton;
+use strict;
 use vars qw(@ISA);
 @ISA = qw(Win32::ActAcc::AO);
+
+sub button_up
+  {
+    my $self = shift;
+    return $self->memoize_member(+['{push button}Up'], 'pushbutton_up');
+  }
+
+# testable('SpinButton::button_down')
+sub button_down
+  {
+    my $self = shift;
+    return $self->memoize_member(+['{push button}Down'], 'pushbutton_down');
+  }
 
 package Win32::ActAcc::Diagram;
 use vars qw(@ISA);

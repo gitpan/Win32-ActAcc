@@ -1,3 +1,8 @@
+/*
+Copyright 2000-2004, Phill Wolf.  See README.
+
+Win32::ActAcc (Active Accessibility)
+*/
 extern bool oriented;
 extern bool live;
 extern HANDLE hMx;
@@ -23,8 +28,3 @@ long emSynch();
 #ifdef __cplusplus
 }
 #endif
-
-
-
-
-

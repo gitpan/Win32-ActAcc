@@ -1,4 +1,4 @@
-/* Copyright 2000, Phill Wolf.  See README. */
+/* Copyright 2000-2004, Phill Wolf.  See README. */
 
 /* Win32::ActAcc (Active Accessibility) C-extension source file */
 
@@ -6,7 +6,7 @@
 
 // Design rules:
 
-//    No C runtime library usage (it could conflict with AUT)
+//    No C runtime library usage (it could conflict with the app-under-test)
 
 #pragma warning(disable: 4514) // unreferenced inline function has been removed
 #pragma warning(disable: 4201) // nonstandard extension used : nameless struct/union
@@ -50,6 +50,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID /*fImpLoad*/)
     return TRUE;
 }
 
+// Increment with wrap-around. 
 int incAndWrap(int a, const int lim, const int increment =1)
 {
 	a += increment;

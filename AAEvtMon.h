@@ -1,4 +1,4 @@
-/* Copyright 2000, Phill Wolf.  See README. */
+/* Copyright 2000-raw2, Phill Wolf.  See README. */
 
 /* Win32::ActAcc (Active Accessibility) C-extension source file */
 

@@ -1,16 +1,19 @@
-int
+# Copyright 2001-2004, Phill Wolf.  See README. -*-Mode: c;-*-
+# Win32::ActAcc (Active Accessibility) C-extension source file
+
+void
 getEventCount(h)
 	INPUT:
 	EventMonitor *h
-	CODE:
+    PREINIT:
+    int ec = -1;
+	PPCODE:
 	if (!h->cons)
 		croak("EventMonitor not active");
 	SetLastError(0);
-	RETVAL = emGetCounter();
-	if (RETVAL == -1)
-		croakWin32Error("getEventCount");
-	OUTPUT:
-	RETVAL
+	ec = emGetCounter();
+	if (ec != -1)
+        XPUSHs(sv_2mortal(newSViv(ec)));
 
 void
 getEvent(h)
@@ -19,6 +22,7 @@ getEvent(h)
 	PREINIT:
 	HWINEVENTHOOK hhook;
 	PPCODE:
+    SetLastError(0);
 	if (!h->cons)
 		croak("EventMonitor not active");
 	hhook = h->cons->hhook;
@@ -34,10 +38,6 @@ getEvent(h)
 			h->readCursorQume += actual;
 			if (hhook == pEventsInBuf->hWinEventHook)
 				break;
-			else
-			{
-				//fprintf(stderr, "Bypassing event intended for %08lx\n", pEventsInBuf->hWinEventHook);
-			}
 		}
 		if (actual) 
 		{
@@ -45,13 +45,18 @@ getEvent(h)
 			HV *hvEventStash = 0;
 			HV* hv = 0;
 			hv = newHV();
-// HEy! What to do in 5.003 without newSVuv ?
-			hv_store(hv, "event", sizeof("event")-1, newSViv(pEventsInBuf->event), 0);
-			hv_store(hv, "hwnd", sizeof("hwnd")-1, newSViv((long) pEventsInBuf->hwnd), 0);
-			hv_store(hv, "idObject", sizeof("idObject")-1, newSViv(pEventsInBuf->idObject), 0);
-			hv_store(hv, "idChild", sizeof("idChild")-1, newSViv(pEventsInBuf->idChild), 0);
-			hv_store(hv, "dwmsEventTime", sizeof("dwmsEventTime")-1, newSViv(pEventsInBuf->dwmsEventTime), 0);
-			hv_store(hv, "hWinEventHook", sizeof("hWinEventHook")-1, newSViv(pEventsInBuf->hWinEventHook), 0);
+			hv_store(hv, "event", sizeof("event")-1, 
+                     newSViv(pEventsInBuf->event), 0);
+			hv_store(hv, "hwnd", sizeof("hwnd")-1, 
+                     newSViv((long) pEventsInBuf->hwnd), 0);
+			hv_store(hv, "idObject", sizeof("idObject")-1, 
+                     newSViv(pEventsInBuf->idObject), 0);
+			hv_store(hv, "idChild", sizeof("idChild")-1, 
+                     newSViv(pEventsInBuf->idChild), 0);
+			hv_store(hv, "dwmsEventTime", sizeof("dwmsEventTime")-1, 
+                     newSViv(pEventsInBuf->dwmsEventTime), 0);
+			hv_store(hv, "hWinEventHook", sizeof("hWinEventHook")-1, 
+                     newSViv((unsigned long)pEventsInBuf->hWinEventHook), 0);
 
 			perlevent = newRV_noinc((SV*) hv);
 			hvEventStash = gv_stashpv("Win32::ActAcc::Event", 0);
@@ -59,12 +64,8 @@ getEvent(h)
 
 			XPUSHs(perlevent);
 		}
-		else
-			XPUSHs(&PL_sv_undef);
 		emUnlock();
 	}
-	else
-		croakWin32Error("clear");
 
 void
 dropHistory(h, msHistoryToKeep)
@@ -76,6 +77,7 @@ dropHistory(h, msHistoryToKeep)
         unsigned int crntTime;
         unsigned int cutoffTime;
 	PPCODE:
+    SetLastError(0);
         crntTime = GetTickCount();
         cutoffTime = crntTime - msHistoryToKeep;
 	if (!h->cons)
@@ -90,38 +92,34 @@ dropHistory(h, msHistoryToKeep)
 			emGetEventPtr(h->readCursorQume, 1, &actual, &pEventsInBuf);
 			if (!actual)
 				break;
-                        if (pEventsInBuf->dwmsEventTime >= cutoffTime)
-                            break; // BEFORE incrementing counter
+            if (pEventsInBuf->dwmsEventTime >= cutoffTime)
+                break; // BEFORE incrementing counter
 			h->readCursorQume += actual;
 			if (hhook == pEventsInBuf->hWinEventHook)
 				break;
-			else
-			{
-				//fprintf(stderr, "Bypassing event intended for %08lx\n", pEventsInBuf->hWinEventHook);
-			}
 		}
 		emUnlock();
+        XPUSHs(&PL_sv_yes);
 	}
-	else
-		croakWin32Error("clear");
 
 void
 clear(h)
 	INPUT:
 	EventMonitor *h
 	PPCODE:
+    SetLastError(0);
 	if (!h->cons)
 		croak("EventMonitor not active");
 	EventMonitor_synch(h);
+    if (!GetLastError()) 
+        XPUSHs(&PL_sv_yes);
+
 
 void
 DESTROY(h)
 	INPUT:
 	EventMonitor *h
 	CODE:
-#ifdef MONITOR_OBJPOOL
-	fprintf(stderr, "DESTROY EventMonitor at %08lx\n", h);
-#endif
 	EventMonitor_deactivate(h);
 	Safefree(h);
 
@@ -130,12 +128,14 @@ synch(hThis,hOther)
 	INPUT:
 	EventMonitor *hThis
 	EventMonitor *hOther
-	CODE:
+	PPCODE:
+    SetLastError(0);
 	if (!hThis->cons)
 		croak("EventMonitor not active");
 	if (!hOther->cons)
 		croak("EventMonitor not active");
 	hThis->readCursorQume = hOther->readCursorQume;
+    XPUSHs(&PL_sv_yes);
 
 int
 isActive(h)
@@ -151,13 +151,17 @@ activate(h, a)
 	INPUT:
 	EventMonitor *h
 	int a
-	CODE:
+	PPCODE:
+    SetLastError(0);
 	if (a && !h->cons)
 	{
 		EventMonitor_activate(h);
-		EventMonitor_synch(h);
+        if (!GetLastError())
+          EventMonitor_synch(h);
 	}
 	else if (!a && h->cons)
 	{
 		EventMonitor_deactivate(h);
 	}
+    if (!GetLastError()) 
+        XPUSHs(&PL_sv_yes);

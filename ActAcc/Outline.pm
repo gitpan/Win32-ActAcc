@@ -1,8 +1,9 @@
-# Copyright 2001, Phill Wolf.  See README.
+# Copyright 2001-2004, Phill Wolf.  See README.
 
 # Win32::ActAcc (Active Accessibility)
 
 package Win32::ActAcc::Outline;
+use strict;
 use vars qw(@ISA);
 @ISA = qw(Win32::ActAcc::AO);
 
@@ -12,7 +13,8 @@ sub iterator
     my $pflags = shift; 
     if (defined($pflags) && $$pflags{'active'})
     {
-        return new Win32::ActAcc::OutlineIterator($self);
+      my $root = $self->getRoot();
+        return new Win32::ActAcc::ArrayIterator($self, +[ $root ]);
     }
     else
     {
@@ -28,6 +30,7 @@ sub getRoot
 }
 
 package Win32::ActAcc::OutlineItem;
+use strict;
 use vars qw(@ISA);
 @ISA = qw(Win32::ActAcc::AO);
 
@@ -57,7 +60,6 @@ sub open
 	    +{ 'event'=>Win32::ActAcc::EVENT_OBJECT_STATECHANGE(),
 	    'name'=>$name,
 	    'role'=>Win32::ActAcc::ROLE_SYSTEM_OUTLINEITEM()});
-    return $self->get_accParent();
 }
 
 sub getLevel
@@ -155,16 +157,19 @@ sub outlinenav {
 }
 
 package Win32::ActAcc::OutlineIterator;
+use strict;
 use vars qw(@ISA);
 @ISA = qw(Win32::ActAcc::Iterator);
 use Carp;
+
+# testable('OutlineIterator')
 
 sub iterable
 {
     my $ao = $_[0]->isa(Win32::ActAcc::Iterator::) ? $_[0]->{'aoroot'} : $_[$#_]; # last argument; so it doesn't matter whether we're invoked as an object or class method
     my $state = $ao->get_accState();
     my $interestingbits = Win32::ActAcc::STATE_SYSTEM_COLLAPSED() 
-                        | Win32::ActAcc::STATE_SYSTEM_EXPANDED();
+      | Win32::ActAcc::STATE_SYSTEM_EXPANDED();
     my $relevantstate = $state & $interestingbits;
     return !!$relevantstate;
 }
@@ -173,7 +178,7 @@ sub open
 {
     my $self = shift;
 
-    croak "Must use OutlineIterator only with OutlineItem (not ".ref($$self{'aoroot'}).")" 
+    croak "Must use OutlineIterator only with Outline or OutlineItem (not ".ref($$self{'aoroot'}).")" 
         unless $$self{'aoroot'}->isa('Win32::ActAcc::OutlineItem');
     $$self{'rootlevel'}=$$self{'aoroot'}->getLevel();
 
