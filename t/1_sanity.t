@@ -15,6 +15,7 @@ use Win32::OLE;
 
 my @t;
 
+push(@t, sub{&t_Desktop;});
 push(@t, sub{&t_AccessibleObjectFromWindow_and_reverse;});
 push(@t, sub{&t_AccessibleChildren_all;});
 push(@t, sub{&t_AccessibleChildren_dflt;});
@@ -57,6 +58,19 @@ sub expectedChildrenOfDesktop
 		'Horizontal'=>Win32::ActAcc::ROLE_SYSTEM_SCROLLBAR(),
 		'Size box'=>Win32::ActAcc::ROLE_SYSTEM_GRIP(),
 	};
+}
+
+sub t_Desktop
+{
+	my $dt1 = Win32::GuiTest::GetDesktopWindow();
+	my $ia1 = AccessibleObjectFromWindow($dt1);
+        my $dt1a = $ia1->WindowFromAccessibleObject();
+
+        my $ia2 = Win32::ActAcc::Desktop();
+        my $dt2a = $ia2->WindowFromAccessibleObject();
+
+        die unless $dt1a==$dt2a;
+        "ok";
 }
 
 sub t_AccessibleObjectFromWindow_and_reverse

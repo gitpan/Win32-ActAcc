@@ -10,11 +10,11 @@ my %h = (
     'NAME'		=> 'Win32::ActAcc',
     'VERSION_FROM'	=> 'ActAcc.pm', # finds $VERSION
     'ABSTRACT_FROM'	=> 'ActAcc.pod', # finds $VERSION
-    'PREREQ_PM'		=> {'Win32::GuiTest'=>0.6, 'Win32::OLE'=>0.13}, # e.g., Module::Name => 1.1
+    'PREREQ_PM'		=> {'Win32::OLE'=>0.13},
     'LIBS'		=> [':nosearch OleAcc.lib'], # e.g., '-lm'
     'DEFINE'		=> '', # e.g., '-DHAVE_SOMETHING'
     'INC'		=> '', # e.g., '-I/usr/include/other',
-	'EXE_FILES' => ['aadigger.pl'],
+	'EXE_FILES' => ['aadigger.pl','aaEvents.pl','aaWhereAmI.pl'],
 	'MYEXTLIB'=>'ActAccEL.lib',
 	'AUTHOR' => 'Phill Wolf (pbwolf@cpan.org)',
 	'depend' => +{'ActAcc.c'=>'ActAcc.xsh AO.xsh EM.xsh'},

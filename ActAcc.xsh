@@ -21,6 +21,21 @@ foo(hwnd)
 	OUTPUT:
 	RETVAL
 
+HWND
+GetDesktopWindow()
+	CODE:
+	RETVAL = GetDesktopWindow();
+	OUTPUT:
+	RETVAL
+
+void
+mouse_button(x,y, ops)
+	int x
+	int y
+	char *ops
+	CODE:
+	mouse_button(x, y, ops);
+
 ActAcc *
 AccessibleObjectFromEvent(hwnd, objectId, childId)
 	INPUT:

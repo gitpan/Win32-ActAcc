@@ -6,7 +6,6 @@ use strict;
 use Win32::OLE;
 use Win32::ActAcc;
 use Data::Dumper;
-use Win32::GuiTest;
 
 sub describeAncestors
 {

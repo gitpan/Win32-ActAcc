@@ -652,6 +652,42 @@ constant(char *namep, int len, int arg)
     return 0;
 }
 
+// translate POINT p from pixels to mickeys
+void ScreenToMouseplane(POINT *p)
+{
+    p->x = MulDiv(p->x, 0x10000, GetSystemMetrics(SM_CXSCREEN));
+    p->y = MulDiv(p->y, 0x10000, GetSystemMetrics(SM_CYSCREEN));
+}
+
+// mouse operations in pixels
+void mouse_button(int x, int y, char *ops)
+{
+    POINT p;
+    p.x = x;  p.y = y;
+    ScreenToMouseplane(&p);
+    while (*ops)
+    {
+        switch (*ops)
+        {
+        case 'm':
+            mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, p.x, p.y, 0, 0);
+            break;
+        case 'd':
+            mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE | MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
+            break;
+        case 'u':
+            mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE | MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
+            break;
+        case 'D':
+            mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE | MOUSEEVENTF_RIGHTDOWN, p.x, p.y, 0, 0);
+            break;
+        case 'U':
+            mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE | MOUSEEVENTF_RIGHTUP, p.x, p.y, 0, 0);
+            break;
+        }
+        ops++;
+    }
+}
 
 MODULE = Win32::ActAcc		PACKAGE = Win32::ActAcc		
 

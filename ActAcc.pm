@@ -23,7 +23,7 @@ use vars qw(
 	$EMDllFile
 );
 
-$VERSION = '0.4';
+$VERSION = '0.5';
 
 require Exporter;
 require DynaLoader;
@@ -36,6 +36,7 @@ use AutoLoader;
 # Do not simply export all your public functions/methods/constants.
 
 @EXPORT = qw(
+Desktop
 AccessibleObjectFromEvent 
 AccessibleObjectFromWindow 
 AccessibleObjectFromPoint
@@ -217,7 +218,7 @@ sub nav
 	my $ao = shift;
 
 	# Default to the desktop window
-	$ao = Win32::ActAcc::AccessibleObjectFromWindow(Win32::GuiTest::GetDesktopWindow()) unless defined($ao);
+	$ao = Win32::ActAcc::AccessibleObjectFromWindow(Win32::ActAcc::GetDesktopWindow()) unless defined($ao);
 
 	my $pChain = shift;
 	my $level = shift;
@@ -318,7 +319,7 @@ sub navlist
 	my $pResults = shift;
 
 	# Default to the desktop window
-	$ao = Win32::ActAcc::AccessibleObjectFromWindow(Win32::GuiTest::GetDesktopWindow()) unless defined($ao);
+	$ao = Win32::ActAcc::AccessibleObjectFromWindow(Win32::ActAcc::GetDesktopWindow()) unless defined($ao);
 
 	$level = 0 unless defined($level);
 
@@ -434,49 +435,24 @@ sub click
 	my $y = shift;
 	my $peventMonitorOptional = shift;
 
-	my ($mx, $my) = pixelToMickeys($x,$y);
-
 	if (defined($peventMonitorOptional))
 	{
 		$$peventMonitorOptional->activate(1);
 	}
 
-	Win32::GuiTest::SendMouseMoveAbs($mx, $my);
-	Win32::GuiTest::SendLButtonDown();
-	Win32::GuiTest::SendLButtonUp();
+	Win32::ActAcc::mouse_button($x, $y, "du");
 }
 
-#general-purpose
-sub pixelToMickeys
+sub Desktop
 {
-	my ($x,$y) = @_;
-
-	# scale by desktop window size
-	my $cxScreen = Win32::ActAcc::GetSystemMetrics(Win32::ActAcc::SM_CXSCREEN());
-	my $cyScreen = Win32::ActAcc::GetSystemMetrics(Win32::ActAcc::SM_CYSCREEN());
-
-	my $mickeysX = ($x << 16) / $cxScreen;
-	my $mickeysY = ($y << 16) / $cyScreen;
-
-	return ($mickeysX, $mickeysY);
+	return AccessibleObjectFromWindow(GetDesktopWindow());
 }
-
-#general-purpose
-sub clickPix
-{
-	my ($pixX, $pixY) = @_;
-	my ($mickeysX, $mickeysY) = pixelToMickeys($pixX, $pixY);
-	Win32::GuiTest::SendMouseMoveAbs($mickeysX, $mickeysY);
-	Win32::GuiTest::SendLButtonDown();
-	Win32::GuiTest::SendLButtonUp();
-}
-
 
 package Win32::ActAcc::AO;
 
 sub describe_meta
 {
-	return "role:name {state,(location),hwnd}"; # keep synchronized with describe()
+	return "role:name {state,(location),id,hwnd}"; # keep synchronized with describe()
 }
 
 sub describe
@@ -500,10 +476,15 @@ sub describe
 		my $h = $ao->WindowFromAccessibleObject();
 		$hwnd = sprintf("%08lx",$h);
 	};
+	my $itemID = "(no ID)";
+	eval
+	  {
+	    $itemID = 'id=' . $ao->get_itemID();
+	  };
 
 	$name = "(undef)" unless defined($name);
 	$location = "(location error)" unless defined($location);
-	return "$role:$name {$state,($location),$hwnd}"; # keep synchronized with describe_meta()
+	return "$role:$name {$state,$location,$itemID,$hwnd}"; # keep synchronized with describe_meta()
 }
 
 sub NavigableChildren
@@ -621,7 +602,7 @@ sub evDescribe
 	my $e = shift;
 
 	my $L = Win32::ActAcc::EventConstantName($$e{'event'});
-	my $ao = eval {Win32::ActAcc::AccessibleObjectFromEvent($$e{'hwnd'}, $$e{'idObject'}, $$e{'idChild'}) };
+	my $ao = eval {$e->getAO()};
 	if (defined($ao))
 	{
 		$L = $L . ' ' . $ao->describe();
@@ -671,7 +652,7 @@ sub waitForEvent
 		$pComparator = $pQuarry;
 	}
 	
-	my $return_ao; 
+	my $rv; 
 
 	PATIENTLY_AWAITING_QUARRY: for (my $sc = 0; !defined($timeoutSecs) || ($sc < $timeoutSecs); $sc++)
 	{
@@ -679,16 +660,11 @@ sub waitForEvent
 		{
 			my $e = $self->getEvent();
 			last DEVOUR_BACKLOG unless defined($e);
-			#print STDERR $e->evDescribe() . "\n";
-			if (&$pComparator($e))
-			{
-				eval { $return_ao = $e->getAO() }; # occasional HRESULT=80004005
-				last PATIENTLY_AWAITING_QUARRY;
-			}
+			last PATIENTLY_AWAITING_QUARRY if (defined($rv = &$pComparator($e)));
 		}
 		sleep(1);
 	}
-	return $return_ao;
+	return $rv;
 }
 
 sub waitForEvent_dfltComparator
@@ -719,7 +695,7 @@ sub waitForEvent_dfltComparator
 		}
 	}
 
-	1;
+	return $ao;
 }
 
 sub debug_spin

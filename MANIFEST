@@ -3,11 +3,12 @@ AO.xsh				ActAcc.xs includes this; covers Win32::ActAcc::AO
 ActAcc.html
 ActAcc.pm			Module
 ActAcc.pod			Docs
+ActAcc-pod.txt			Docs (source)
 ActAcc.xs			Extension core
 ActAcc.xsh			ActAcc.xs includes this; covers Win32::ActAcc
 ActAccEM.x			C code for ActAccEM.dll; called 'x' to escape MakeMaker's attention
 EM.xsh				ActAcc.xs includes this; covers Win32::EventListener
-Changes
+CHANGES
 IAccessible.h			From the July 2000 Platform SDK files, in case yours are earlier
 MANIFEST			List of files
 Makefile.PL
@@ -15,8 +16,13 @@ README
 aaEvents.pl			Demo WinEvents
 aaWhereAmI.pl			Demo mouse pointer events
 aadigger.pl			Demo accessible-object hierarchy
+aaDigger.pod
+aaDigger.html
 ActAccEL.h			Circular-buffer event functions
 ActAccEL.x			Circular-buffer event functions
 t/1_sanity.t
 t/2_english.t
 typemap
+x86/Win32-ActAcc.tar.gz		ActivePerl PPM installable module
+Win32-ActAcc.ppd		ActivePerl PPM installable module
+eg/aaAIMEliza.pl		Chatbot::Eliza answers your incoming AOL Instant Messages

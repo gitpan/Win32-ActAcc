@@ -1,0 +1,133 @@
+<HTML>
+<HEAD>
+<TITLE>aadigger - Navigates tree of Accessible Objects</TITLE>
+<LINK REV="made" HREF="mailto:">
+</HEAD>
+
+<BODY>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<LI><A HREF="#name">NAME</A></LI>
+	<LI><A HREF="#synopsis">SYNOPSIS</A></LI>
+	<UL>
+
+		<LI><A HREF="#windows and clients">Windows and Clients</A></LI>
+		<LI><A HREF="#aadigger commands">aaDigger Commands</A></LI>
+		<UL>
+
+			<LI><A HREF="#drill down by objectnumber">Drill down by object-number</A></LI>
+			<LI><A HREF="#up (..)">Up (..)</A></LI>
+			<LI><A HREF="#search (/regexp)">Search (/regexp)</A></LI>
+			<LI><A HREF="#tree">Tree</A></LI>
+			<LI><A HREF="#all (show hidden objects)">All (Show hidden objects)</A></LI>
+		</UL>
+
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H1><A NAME="name">NAME</A></H1>
+<P>aadigger - Navigates tree of Accessible Objects</P>
+<P>
+<HR>
+<H1><A NAME="synopsis">SYNOPSIS</A></H1>
+<P>aaDigger is a utility with which you can ``drill down'' through the
+hierarchy of Active Accessibility objects.  The Desktop is at the root of the tree.</P>
+<P>Use aaDigger when writing Active Accessibility scripts.
+aaDigger helps you figure out how to make your scripts relate to 
+the ``real world'' on your computer's screen.</P>
+<PRE>
+ C:\&gt;aadigger</PRE>
+<PRE>
+ aaDigger - Traverse window hierarchy</PRE>
+<PRE>
+ Windows shown as: role:name {state,(location),id,hwnd}
+ Commands:
+   99      - expand window by number (specify number from the list)
+   ..      - go 'up' one level, to parent of current window
+   /regexp - find children matching regexp
+   tree    - display children hierarchically
+   all     - expand list to include invisible children
+ === window  Desktop</PRE>
+<PRE>
+ 0+ client:Desktop {,(0,0,1024,768),id=0,0001000c}
+ ? 0</PRE>
+<PRE>
+ === client  Desktop</PRE>
+<PRE>
+ 0+ window:(undef) {sizeable,(-2,715,1028,55),id=0,00020042}
+ 1+ window:emacs: aadigger.pl {sizeable+moveable+focusable,(65,27,825,663),id=0,00270324}
+ ?</PRE>
+<P>
+<H2><A NAME="windows and clients">Windows and Clients</A></H2>
+<P>Using aaDigger, you will note that objects whose role is 'window', 
+generally have children in roles 'client' and 'title bar', among others.
+(The 'client' area is where applications do their creative work.)</P>
+<P>Accordingly, when you run aaDigger and it starts off at the Desktop-window,
+your first drill-down takes you to the Desktop-client.  Within the
+Desktop-client, you will find the windows for your applications -- as
+well as the system tray.</P>
+<P>
+<H2><A NAME="aadigger commands">aaDigger Commands</A></H2>
+<P>aaDigger is command-driven.  You type in a command when aaDigger 
+displays its prompt:</P>
+<PRE>
+ ?</PRE>
+<P>
+<H3><A NAME="drill down by objectnumber">Drill down by object-number</A></H3>
+<P>Type the number of an object (as shown in aaDigger's object list) 
+to ``drill down'' and observe the children of that object.</P>
+<P>The object that defines the context of the list is shown with
+the following attributes.  (Most objects do not define any of these.)</P>
+<PRE>
+ Description
+ Value
+ Help
+ DefaultAction
+ KeyboardShortcut</PRE>
+<P>The children are shown in the form</P>
+<PRE>
+ role:name {state,(location),id,hwnd}</PRE>
+<P>You can find more about all of these object traits in the Active Accessibility documentation.</P>
+<P><STRONG>role</STRONG>, e.g., 'window', 'client', 'title bar', reflects
+the Active Accessibility object taxonomy and supplants
+the Win32 notion of ``window class''.</P>
+<P><STRONG>name</STRONG> is how the object identifies itself.  Some 
+objects steal the name of their parent or of a certain child.
+Others change their name dynamically to reflect what the user 
+is doing.  Some objects have no name.</P>
+<P><STRONG>state</STRONG> is a set of state-bits, such as sizeable+moveable+focusable.</P>
+<P><STRONG>location</STRONG> is the (left, top, width, height) of the object.  
+The origin (0,0) is at the screen's upper left.</P>
+<P><STRONG>hwnd</STRONG> is the result of calling WindowFromAccessibleObject.  Not
+all accessible objects correspond to ``windows'' in the HWND sense.</P>
+<P>
+<H3><A NAME="up (..)">Up (..)</A></H3>
+<P>Move from a child object to its parent.</P>
+<P>
+<H3><A NAME="search (/regexp)">Search (/regexp)</A></H3>
+<P>Recursively find all children whose name matches the regexp.</P>
+<P>
+<H3><A NAME="tree">Tree</A></H3>
+<P>Shows the object's children, grandchildren, great-grandchildren, etc.</P>
+<P>
+<H3><A NAME="all (show hidden objects)">All (Show hidden objects)</A></H3>
+<P>Expands the scope of the numbered object list so it includes 
+objects that do have the 'invisible' state bit.</P>
+<P>``All'' is not sticky.  Next time you navigate (using a number or ..), 
+you will once more see only the visible objects.
+</P>
+<PRE>
+
+=cut</PRE>
+
+</BODY>
+
+</HTML>

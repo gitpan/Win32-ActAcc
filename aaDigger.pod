@@ -1,0 +1,112 @@
+=head1 NAME
+
+aadigger - Navigates tree of Accessible Objects
+
+=head1 SYNOPSIS
+
+aaDigger is a utility with which you can "drill down" through the
+hierarchy of Active Accessibility objects.  The Desktop is at the root of the tree.
+
+Use aaDigger when writing Active Accessibility scripts.
+aaDigger helps you figure out how to make your scripts relate to 
+the "real world" on your computer's screen.
+
+ C:\>aadigger
+
+ aaDigger - Traverse window hierarchy
+
+ Windows shown as: role:name {state,(location),id,hwnd}
+ Commands:
+   99      - expand window by number (specify number from the list)
+   ..      - go 'up' one level, to parent of current window
+   /regexp - find children matching regexp
+   tree    - display children hierarchically
+   all     - expand list to include invisible children
+ === window  Desktop
+
+ 0+ client:Desktop {,(0,0,1024,768),id=0,0001000c}
+ ? 0
+
+ === client  Desktop
+
+ 0+ window:(undef) {sizeable,(-2,715,1028,55),id=0,00020042}
+ 1+ window:emacs: aadigger.pl {sizeable+moveable+focusable,(65,27,825,663),id=0,00270324}
+ ?
+
+=head2 Windows and Clients
+
+Using aaDigger, you will note that objects whose role is 'window', 
+generally have children in roles 'client' and 'title bar', among others.
+(The 'client' area is where applications do their creative work.)
+
+Accordingly, when you run aaDigger and it starts off at the Desktop-window,
+your first drill-down takes you to the Desktop-client.  Within the
+Desktop-client, you will find the windows for your applications -- as
+well as the system tray.
+
+=head2 aaDigger Commands
+
+aaDigger is command-driven.  You type in a command when aaDigger 
+displays its prompt:
+
+ ?
+
+=head3 Drill down by object-number
+
+Type the number of an object (as shown in aaDigger's object list) 
+to "drill down" and observe the children of that object.
+
+The object that defines the context of the list is shown with
+the following attributes.  (Most objects do not define any of these.)
+
+ Description
+ Value
+ Help
+ DefaultAction
+ KeyboardShortcut
+
+The children are shown in the form
+
+ role:name {state,(location),id,hwnd}
+
+You can find more about all of these object traits in the Active Accessibility documentation.
+
+B<role>, e.g., 'window', 'client', 'title bar', reflects
+the Active Accessibility object taxonomy and supplants
+the Win32 notion of "window class".
+
+B<name> is how the object identifies itself.  Some 
+objects steal the name of their parent or of a certain child.
+Others change their name dynamically to reflect what the user 
+is doing.  Some objects have no name.
+
+B<state> is a set of state-bits, such as sizeable+moveable+focusable.
+
+B<location> is the (left, top, width, height) of the object.  
+The origin (0,0) is at the screen's upper left.
+
+B<hwnd> is the result of calling WindowFromAccessibleObject.  Not
+all accessible objects correspond to ``windows'' in the HWND sense.
+
+=head3 Up (..)
+
+Move from a child object to its parent.
+
+=head3 Search (/regexp)
+
+Recursively find all children whose name matches the regexp.
+
+=head3 Tree
+
+Shows the object's children, grandchildren, great-grandchildren, etc.
+
+=head3 All (Show hidden objects)
+
+Expands the scope of the numbered object list so it includes 
+objects that do have the 'invisible' state bit.
+
+``All'' is not sticky.  Next time you navigate (using a number or ..), 
+you will once more see only the visible objects.
+ 
+=cut
+

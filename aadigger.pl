@@ -5,15 +5,15 @@
 use strict;
 use Win32::OLE;
 use Win32::ActAcc;
-use Win32::GuiTest;
+
+use Data::Dumper;
 
 # main
 sub main
 {
 	Win32::OLE->Initialize();
-	my $hwndDT = Win32::GuiTest::GetDesktopWindow();
-	my $ao = Win32::ActAcc::AccessibleObjectFromWindow($hwndDT);
-	print "\naaDigger - Traverse window hierarchy\n\n";
+	my $ao = Win32::ActAcc::Desktop();
+	print "\naaDigger - Navigates tree of Accessible Objects\n\n";
 	help();
 	menu($ao);
 }
@@ -43,9 +43,9 @@ sub help
 {
 	print "Windows shown as: " .  Win32::ActAcc::AO::describe_meta() . "\n";
 	print "Commands:\n";
-	print "  99      - expand window by number\n";
-	print "  ..      - go to parent\n";
-	print "  /findMe - find children matching regexp\n";
+	print "  99      - expand window by number (specify number from the list)\n";
+	print "  ..      - go 'up' one level, to parent of current window\n";
+	print "  /regexp - find children matching regexp\n";
 	print "  tree    - display children hierarchically\n";
 	print "  all     - expand list to include invisible children\n";
 }
@@ -78,7 +78,7 @@ sub menu
 		printAtt(\%i, 'DefaultAction');
 		printAtt(\%i, 'KeyboardShortcut');
 
-		print "\n";
+		print "\nChildren:\n";
 
 		my @ch = $ao->AccessibleChildren();
 
@@ -91,7 +91,7 @@ sub menu
 				print "$i$expansion ".($ch[$i]->describe()) . "\n";
 			}
 
-			print "? ";
+			print "\nCommand?  Child number?  ";
 			my $fullcmd = <STDIN>;
 			chomp $fullcmd;
 			if ($fullcmd =~ /^\d/)
@@ -148,6 +148,10 @@ sub menu
 				help();
 				next WITH_LIST_OF_CHILDREN;
 			}
+			else {
+			  print "What? Try help\n";
+			}
+			    
 			last WITH_LIST_OF_CHILDREN;
 		}
 	}

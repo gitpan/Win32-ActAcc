@@ -1,43 +1,91 @@
 NAME
-    Win32::ActAcc - an Active Accessibility client for Perl
+    Win32::ActAcc - `Active Accessibility' for task automation, GUI testing
 
 SYNOPSIS
+    Win32::ActAcc gives Perl scripts free run of the Active Accessibility
+    client API; IAccessible; and ``WinEvents''.
+
+    Active Accessibility lets Perl scripts see what's on the screen, even when
+    programs use ``custom controls'', lightweight (drawn) controls that are
+    not technically windows, and the like: VB for example.
+
+    You'll want to additionally use Win32::GuiTest, and other Win32 modules,
+    if you want your script to click, type, manipulate the clipboard, etc.
+
      use Win32::OLE;
-     use Win32::GuiTest;
      use Win32::ActAcc;
-     Win32::OLE->Initialize();  # Active Accessibility is based on COM
+     Win32::OLE->Initialize(); 
 
-     my $hwnd_desktop = Win32::GuiTest::GetDesktopWindow();
-     my $ao = AccessibleObjectFromWindow($hwnd_desktop);
+     # Start navigating window tree at its root -- the Desktop.
+     $accObj = Desktop();
+     @childAccObjs = $accObj->AccessibleChildren();
 
-     @ch = $ao->AccessibleChildren(); # returns list of accessible objects
+     $name = $accObj->get_accName();
+     $rolename = Win32::ActAcc::GetRoleText($accObj->get_accRole());
 
-     $name = $ao->get_accName();
-     $rolename = Win32::ActAcc::GetRoleText($ao->get_accRole());
+    For full documentation, refer to ActAcc.html inside the zip.
 
 INSTALLATION
+  Installation from source code
+
      perl makefile.pl
      nmake 
-     nmake test
      nmake install
+     nmake test
+
+    Yes, you have to install it before you test it. Otherwise it can't find
+    its DLL. Probably someone will figure out how to fix this.
 
     Prerequisites:
 
-    *   You need the July 2000 "Platform SDK". Earlier versions of the Active
-        Accessibility SDK could give problems compiling. I compiled ActAcc
-        using Visual C++ 6.0 SP 4.
+    *   You may need Visual C++ 6.0 SP 4. The C/C++ part of Win32::ActAcc
+        might not be portable to other compilers.
 
-    *   The test suite requires Notepad.exe on the path.
+    *   You need the July 2000 "Platform SDK". Earlier versions of the Active
+        Accessibility SDK could give problems compiling.
+
+    *   The test suite requires Notepad.exe on the path. Also, it requires
+        Win32::GuiTest.
+
+    *   The Eliza-AOLInstantMessenger sample requires up-to-date HTML parsing
+        modules. It will tell you if yours are missing or out-of-date.
+
+  Installation for ActivePerl users (PPM)
 
     ActivePerl users can install Win32::ActAcc using PPM.
 
-     ppm install --location=http://members.bellatlantic.net/~pbwolf/ppmrepo Win32-ActAcc
+    1   Unzip the zip (Win32-ActAcc-n.n.zip). Make sure your unzip program
+        preserved the directory tree: for example, you should see
+        Win32-ActAcc.tar.gz in an "x86" subdirectory under the directory that
+        contains ActAcc.html (the documentation).
+
+    2   Open a command prompt window.
+
+    3   In the command prompt, "cd" to the directory that contains
+        ActAcc.html.
+
+    4   In the command prompt, issue the following command.
+
+         ppm install --location=. Win32-ActAcc
+
+    To check the installation, you may try aaDigger.pl. The test suite (nmake
+    test) doesn't seem to work if you do the ppm installation.
+
+  Files Installed
+
+    *   In bin: aaDigger.bat and aaDigger.pl, aaEvents.bat and aaEvents.pl,
+        aaWhereAmI.bat and aaWhereAmI.pl
+
+    *   In site\lib\Win32: aaDigger.pl, aaEvents.pl, aaWhereAmI.pl, ActAcc.pm,
+        ActAcc.pod
+
+    *   In site\lib\auto\Win32\ActAcc: ActAcc.dll, ActAccEM.dll
 
 COPYRIGHT
-    Copyright 2000, Phill Wolf.
+    Copyright 2001, Phill Wolf.
 
-    You may distribute under the terms of the Artistic License, as specified
-    in the README file of the Perl distribution.
+    You may use Win32::ActAcc under the terms of the Artistic License, as
+    specified in the README file of the Perl distribution.
 
 AUTHOR
     Phill Wolf, pbwolf@cpan.org
