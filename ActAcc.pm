@@ -23,7 +23,7 @@ use vars qw(
 	$EMDllFile
 );
 
-$VERSION = '0.2';
+$VERSION = '0.4';
 
 require Exporter;
 require DynaLoader;
